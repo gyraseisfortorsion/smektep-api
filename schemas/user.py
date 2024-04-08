@@ -32,7 +32,7 @@ class UserCreate(Model):
 
     role: int
     email: EmailStr
-    password: str
+    password_hash: str
     user_info: UserInfoCreate
 
 class UserUpdate(Model):
