@@ -146,8 +146,9 @@ class AuthService():
     ):
         # print(form_data)
         user = self.authenticate_user(form_data.email, form_data.password, db)
-        user_info = db.query(UserInfo).filter(
-            UserInfo.id == user.user_info_id).first()
+        if isinstance(user, User):  # Replace 'User' with the actual class name of the user object
+            user_info = db.query(UserInfo).filter(
+                UserInfo.id == user.user_info_id).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

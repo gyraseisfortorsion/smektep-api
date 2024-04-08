@@ -19,6 +19,7 @@ class UserInfoCreate(Model):
     last_name: str
     father_name: Optional[str]
     address: Optional[str]
+    gender: bool
     phone_number: Optional[str]
 
 class UserRead(ReadModel):
