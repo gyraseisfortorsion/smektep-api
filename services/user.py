@@ -29,8 +29,10 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
         # then create user
         body.password_hash = hash_password(body.password_hash)
         user = User(**body.dict(exclude={'user_info'}), user_info_id=user_info_id) 
+        # user.password_hash = hash_password(body.password_hash)
         db.add(user)
         db.commit()
+        return user
 
 
     def get_user_by_email(self, email: str, db: Session):
