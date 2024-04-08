@@ -63,7 +63,7 @@ class AuthService():
 
     #     return {"access_token": access_token, "refresh_token": refresh_token}
 
-    def authenticate_user(self, email: str, password: str, db: Session):
+    async def authenticate_user(self, email: str, password: str, db: Session):
         user = user_service.get_user_by_email(email, db)
         if not user:
             # print("user")
@@ -138,14 +138,14 @@ class AuthService():
             raise HTTPException(status_code=400, detail="Inactive user")
         return current_user
 
-    def login_for_access_token(
+    async def login_for_access_token(
         self,
         form_data: LoginForm,
         # response: Response,
         db: Session
     ):
         # print(form_data)
-        user = self.authenticate_user(form_data.email, form_data.password, db)
+        user = await self.authenticate_user(form_data.email, form_data.password, db)
         if isinstance(user, User):  # Replace 'User' with the actual class name of the user object
             user_info = db.query(UserInfo).filter(
                 UserInfo.id == user.user_info_id).first()
