@@ -27,11 +27,12 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
         db.flush()
         user_info_id = user_info.id
         # then create user
+        body.password_hash = hash_password(body.password_hash)
         user = User(**body.dict(exclude={'user_info'}), user_info_id=user_info_id) 
         db.add(user)
         db.commit()
 
-        
+
     def get_user_by_email(self, email: str, db: Session):
         return db.query(User).filter(User.email == email).first()
     
