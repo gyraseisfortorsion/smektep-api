@@ -68,6 +68,8 @@ class AuthService():
         if not user:
             # print("user")
             return False
+        print(user.password_hash, password)
+        print(verify_password(password, user.password_hash))
         if not verify_password(password, user.password_hash):
             # print("pass")
             return False
