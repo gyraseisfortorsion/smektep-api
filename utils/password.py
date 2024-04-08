@@ -10,7 +10,8 @@ def hash_password(password: str):
 def verify_password(password: str, hashed_password: str):
     try:
         return pwd_context.verify(password, hashed_password)
-    except:
+    except Exception as e:
+        print(e)
         return False
 
 # def get_access_token_by_user_id(Authorize: AuthJWT,
