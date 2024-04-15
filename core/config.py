@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     ALGORITHM: str
+    OPENAI_API_KEY: str
+    PASSWORD: str
 
     class Config:
         env_file = ".env"
