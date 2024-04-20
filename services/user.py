@@ -38,6 +38,9 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
     def get_user_by_email(self, email: str, db: Session):
         return db.query(User).filter(User.email == email).first()
     
+    def get_all_users(self, db: Session):
+        return db.query(User).all()
+    
 user_service = UserService(User)
         
         

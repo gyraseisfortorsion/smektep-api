@@ -23,7 +23,7 @@ class UserInfoCreate(Model):
     phone_number: Optional[str]
 
 class UserRead(ReadModel):
-    role: str
+    role: int
     email: EmailStr
     last_signed_at: Optional[datetime.datetime]
     user_info: UserInfoRead

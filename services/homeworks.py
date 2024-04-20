@@ -34,7 +34,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity):
 
         # Generate problems based on answers
         problems = client.chat.completions.create(
-            model="gpt-4-turbo",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers"},
                 {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}."}
