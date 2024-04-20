@@ -32,6 +32,7 @@ class AuthService():
 
     # def _generate_tokens(self, Authorize: AuthJWT, user: User):
 
+
     #     user_claims = {
     #         "role": str(user.role),
     #         "phone": str(user.user_info.phone_number)
