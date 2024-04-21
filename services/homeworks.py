@@ -12,7 +12,7 @@ from core import settings
 # )
 
 
-async def generate_homework(subject, topic, grade_level, difficulty, quantity, extra_info=None):
+async def generate_homework(subject, topic, grade_level, difficulty, quantity, extra_info="Every character in generated problems should be either Hernan or Shakhnazar"):
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     # client = openai.ChatCompletion.create(
     #     model="gpt-4-turbo",
@@ -53,7 +53,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
             problems = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku staff (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Every problem that you come up with should be based on your personality, add a little otaku humor"},
+                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku staff (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Every problem that you come up with should be based on your personality, add a little otaku humor. "},
                     {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                 ]
             )
