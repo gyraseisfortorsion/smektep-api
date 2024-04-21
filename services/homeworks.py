@@ -73,7 +73,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
     else:
         if extra_info is not None:
             client = client.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
                     {"role": "user", "content": f"Generate a {topic} homework. Also account for this: {extra_info}"}
@@ -81,7 +81,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
             )
         else:
             client = client.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
                     {"role": "user", "content": f"Generate a {topic} homework."}

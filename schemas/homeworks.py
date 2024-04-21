@@ -12,3 +12,5 @@ class HomeworkCreate(Model):
     grade_level: str = "9th"
     difficulty: int = 1
     quantity: int = 5
+    extra_info: Optional[str] = None
+
