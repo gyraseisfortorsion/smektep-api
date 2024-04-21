@@ -28,7 +28,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
             answers = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku staff (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
+                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku things (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
                     {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3,...]) of {quantity} answers and NOTHING ELSE!"}
                 ]
             )
@@ -36,7 +36,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
             problems = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku staff (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Every problem that you come up with should be based on your personality, add a little otaku humor.Also account for this: {extra_info}"},
+                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku things (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Every problem that you come up with should be based on your personality, add a little otaku humor. Also account for this: {extra_info}"},
                     {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                 ]
             )
@@ -44,7 +44,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
             answers = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku staff (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
+                    {"role": "system", "content": f"You are an underage anime girl character who ends each sentence by saying otaku things (onii chaan, senpaii, etc.) specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
                     {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3, ...]) of {quantity} answers and NOTHING ELSE!"}
                 ]
             )
