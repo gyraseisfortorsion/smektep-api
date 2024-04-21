@@ -29,7 +29,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
-                    {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3]) of {quantity} answers and NOTHING ELSE!"}
+                    {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3,...]) of {quantity} answers and NOTHING ELSE!"}
                 ]
             )
 
@@ -37,7 +37,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
-                    {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}."}
+                    {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                 ]
             )
         else:
@@ -45,7 +45,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
-                    {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3]) of {quantity} answers and NOTHING ELSE!"}
+                    {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3, ...]) of {quantity} answers and NOTHING ELSE!"}
                 ]
             )
 
@@ -54,7 +54,7 @@ async def generate_homework(subject, topic, grade_level, difficulty, quantity, e
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers"},
-                    {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}."}
+                    {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                 ]
             )
 
