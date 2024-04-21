@@ -28,6 +28,8 @@ class UserRead(ReadModel):
     last_signed_at: Optional[datetime.datetime]
     user_info: UserInfoRead
 
+
+
 class UserCreate(Model):
     model_config = ConfigDict(from_attributes=True)
 
@@ -45,9 +47,8 @@ class UserUpdate(Model):
     user_info: Optional[UserInfoCreate]
 
 class StudentInfoRead(ReadModel):
-    model_config = ConfigDict(from_attributes=True)
+    # model_config = ConfigDict(from_attributes=True)
     
-    user: UserRead
     grade_level: int
     guardian_phone_number: str
     guardian_first_name: str
@@ -63,8 +64,19 @@ class StudentInfoCreateAttach(Model):
     guardian_first_name: str
     guardian_last_name: str
     guardian_father_name: Optional[str]
-    guardian_email: str
+    guardian_email: EmailStr
     user_id: uuid.UUID
+
+class StudentInfoCreate(Model):
+    model_config = ConfigDict(from_attributes=True)
+
+    grade_level: int
+    guardian_phone_number: str
+    guardian_first_name: str
+    guardian_last_name: str
+    guardian_father_name: Optional[str]
+    guardian_email: str
+    user: UserCreate
 
 class StudentInfoCreate(Model):
     model_config = ConfigDict(from_attributes=True)
@@ -74,13 +86,17 @@ class StudentInfoCreate(Model):
     guardian_first_name: str
     guardian_last_name: str
     guardian_father_name: Optional[str]
-    guardian_email: str
+    guardian_email: EmailStr
     user: UserCreate
+
+class UserStudentRead(UserRead):
+    # model_config = ConfigDict(from_attributes=True)
+    student_info: StudentInfoRead
+
 
 class TeacherInfoRead(ReadModel):
     model_config = ConfigDict(from_attributes=True)
     
-    user: UserRead
     department_id: uuid.UUID
 
 class TeacherInfoCreate(Model):
@@ -94,3 +110,6 @@ class TeacherInfoCreateAttach(Model):
     
     department_id: uuid.UUID
     user_id: uuid.UUID
+
+class UserTeacherRead(UserRead):
+    teacher_info: TeacherInfoRead

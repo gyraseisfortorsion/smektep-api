@@ -4,7 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from core import Base
 from datetime import datetime
-
+import uuid
 class User(isActiveModel):
     __tablename__ = 'users'
 
@@ -17,8 +17,8 @@ class User(isActiveModel):
 
 
     user_info = relationship('UserInfo', back_populates='user')
-    teacher_info = relationship('TeacherInfo', back_populates='user')
-    student_info=relationship('StudentInfo', back_populates='user')
+    teacher_info = relationship('TeacherInfo', back_populates='user', uselist=False)
+    student_info=relationship('StudentInfo', back_populates='user', uselist=False)
 
 class UserInfo(Model):
     __tablename__ = 'user_info'
@@ -35,6 +35,8 @@ class UserInfo(Model):
 class StudentInfo(Model):
     __tablename__ = 'student_info'
 
+    # id = Column(UUID, primary_key=True,
+    #         nullable=False, default=lambda: str(uuid.uuid4()))
     grade_level = Column(Integer)
     guardian_phone_number = Column(String)
     guardian_first_name = Column(String)

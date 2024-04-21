@@ -1,8 +1,9 @@
 from utils import hash_password, verify_password
 from core import settings, get_db
-from models import User, RefreshToken, UserInfo
+from models import User, RefreshToken, UserInfo, StudentInfo, TeacherInfo
 from schemas import (
     LoginForm,
+    UserStudentRead,
 )
 from datetime import timedelta, datetime
 from jose import JWTError, jwt
@@ -131,6 +132,7 @@ class AuthService():
         user = user_service.get_by_id(db, user_id)
         if user is None:
             raise credentials_exception
+        # print(user.__dict__)
         return user
 
     def get_current_active_user(
