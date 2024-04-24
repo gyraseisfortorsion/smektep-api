@@ -6,8 +6,8 @@ from models import Assignment
 from schemas import AssignmentCreate, AssignmentUpdate
 from datetime import datetime
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+# from reportlab.lib.pagesizes import letter
+# from reportlab.pdfgen import canvas
 
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
 
@@ -84,37 +84,37 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         
 
 
-    def generate_pdf_from_homework(problems, answers, subject):
-        filename = f"{subject}_{datetime.now()}_homework.pdf"
-        c = canvas.Canvas(filename, pagesize=letter)
-        width, height = letter
+    # def generate_pdf_from_homework(problems, answers, subject):
+    #     filename = f"{subject}_{datetime.now()}_homework.pdf"
+    #     c = canvas.Canvas(filename, pagesize=letter)
+    #     width, height = letter
 
-        # Write problems
-        c.setFont("Helvetica", 12)
-        c.drawString(30, height - 50, "Problems:")
-        textobject = c.beginText()
-        textobject.setTextOrigin(30, height - 70)
-        textobject.setFont("Helvetica", 10)
-        for problem in problems:
-            textobject.textLine(problem)
-        c.drawText(textobject)
+    #     # Write problems
+    #     c.setFont("Helvetica", 12)
+    #     c.drawString(30, height - 50, "Problems:")
+    #     textobject = c.beginText()
+    #     textobject.setTextOrigin(30, height - 70)
+    #     textobject.setFont("Helvetica", 10)
+    #     for problem in problems:
+    #         textobject.textLine(problem)
+    #     c.drawText(textobject)
 
-        # Write answers
-        c.setFont("Helvetica", 12)
-        c.drawString(30, height - 120, "Answers:")
-        textobject = c.beginText()
-        textobject.setTextOrigin(30, height - 140)
-        textobject.setFont("Helvetica", 10)
-        for answer in answers:
-            textobject.textLine(answer)
-        c.drawText(textobject)
+    #     # Write answers
+    #     c.setFont("Helvetica", 12)
+    #     c.drawString(30, height - 120, "Answers:")
+    #     textobject = c.beginText()
+    #     textobject.setTextOrigin(30, height - 140)
+    #     textobject.setFont("Helvetica", 10)
+    #     for answer in answers:
+    #         textobject.textLine(answer)
+    #     c.drawText(textobject)
 
-        c.save()   
-        return filename
+    #     c.save()   
+    #     return filename
     
-    def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
-        pdf = self.generate_pdf_from_homework(problems, answers, subject)
-        assignment = Assignment(type='homework', date_from=date_from, date_to=date_to, description=description, pdf_url=pdf, max_grade=100, name=max_grade, name=name, created_at=datetime.now(), updated_at=datetime.now())
-        db.add(assignment)
-        db.commit()
-        return assignment
+    # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
+    #     pdf = self.generate_pdf_from_homework(problems, answers, subject)
+    #     assignment = Assignment(type='homework', date_from=date_from, date_to=date_to, description=description, pdf_url=pdf, max_grade=100, name=max_grade, name=name, created_at=datetime.now(), updated_at=datetime.now())
+    #     db.add(assignment)
+    #     db.commit()
+    #     return assignment

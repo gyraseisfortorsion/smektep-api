@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from .base import isActiveModel, Model
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from core import Base
 from datetime import datetime
@@ -9,13 +9,12 @@ class User(isActiveModel):
     __tablename__ = 'users'
 
     user_info_id = Column(ForeignKey('user_info.id', ondelete='SET NULL'), nullable=False)
-    role = Column(Integer, nullable=False)
     school_id = Column(UUID)
     password_hash = Column(String, nullable=False)
     email = Column(String, nullable=False)
     last_signed_at = Column(DateTime)
-
-
+    role = Column(Enum('teacher', 'secondary_teacher', 'curator', 'moderator', 'admin', 'assistant', 'student', name='role'))
+    
     user_info = relationship('UserInfo', back_populates='user')
     teacher_info = relationship('TeacherInfo', back_populates='user', uselist=False)
     student_info=relationship('StudentInfo', back_populates='user', uselist=False)
