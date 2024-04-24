@@ -19,6 +19,8 @@ class User(isActiveModel):
     user_info = relationship('UserInfo', back_populates='user')
     teacher_info = relationship('TeacherInfo', back_populates='user', uselist=False)
     student_info=relationship('StudentInfo', back_populates='user', uselist=False)
+    classrooms = relationship('ClassroomUser', back_populates='user')
+    assignment_submissions = relationship('AssignmentSubmission', back_populates='student')
 
 class UserInfo(Model):
     __tablename__ = 'user_info'

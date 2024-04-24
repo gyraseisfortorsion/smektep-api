@@ -55,7 +55,8 @@ class NamedModel(Model):
     __abstract__ = True
 
     name = Column(String, nullable=False)
-    nameKZ = Column('namekz', String, nullable=True)
+    nameRU = Column('name_ru', String, nullable=True)
+    nameKZ = Column('name_kz', String, nullable=True)
 
 
 """

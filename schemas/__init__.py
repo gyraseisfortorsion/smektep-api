@@ -1,4 +1,4 @@
 from .auth import LoginForm
 from .base import Model
 from .user import *
-from .homeworks import HomeworkCreate
+from .assignments import AssignmentCreate, AssignmentUpdate
