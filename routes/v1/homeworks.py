@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
 from schemas import HomeworkCreate
-from services import generate_homework as generate
+from services import assignment_service
 
 router = APIRouter(prefix="/homeworks", tags=["Homeworks"])
 
@@ -12,5 +12,5 @@ async def generate_homework(password: str, body: HomeworkCreate, credentials: HT
     if password != settings.PASSWORD:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
     else:
-        hw = await generate(body.subject, body.topic, body.grade_level, body.difficulty, body.quantity)
+        hw = await assignment_service.generate_homework(body.subject, body.topic, body.grade_level, body.difficulty, body.quantity)
         return hw

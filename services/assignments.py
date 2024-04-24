@@ -118,3 +118,5 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     #     db.add(assignment)
     #     db.commit()
     #     return assignment
+
+assignment_service = AssignmentService(Assignment)
