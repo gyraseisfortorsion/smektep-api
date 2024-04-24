@@ -123,7 +123,7 @@ class AuthService():
                                  algorithms=[settings.ALGORITHM])
             # print(token)
             user_id: int = payload.get("sub")
-            user_group: int = payload.get("group")
+            user_group: int = payload.get("role")
             if user_id is None:
                 raise credentials_exception
         except JWTError:
@@ -165,7 +165,7 @@ class AuthService():
             {
                 "sub": str(user.id),
                 "phone": user_info.phone_number,
-                "group": "1"
+                "role": user.role
             },
             access_token_expires
         )
@@ -175,7 +175,7 @@ class AuthService():
             data={
                 "sub": str(user.id),
                 "phone": user_info.phone_number,
-                "group": "1"
+                "role": user.role
             }
         )
         return {"access_token": access_token,
@@ -229,5 +229,9 @@ class AuthService():
                             value=access_token, httponly=True)
         return {"access_token": access_token, "token_type": "bearer"}
 
+    def get_role(self, token: str):
+        payload = jwt.decode(token, settings.SECRET_KEY,
+                             algorithms=[settings.ALGORITHM])
+        return payload.get("role")
 
 auth_service = AuthService()
