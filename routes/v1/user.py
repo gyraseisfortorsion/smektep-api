@@ -18,13 +18,15 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db
 @router.get("/teachers/me", response_model=UserTeacherRead)
 def get_teacher_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user = auth_service.get_current_user(credentials.credentials, db)
+    if user.teacher_info is None:
+        raise HTTPException(status_code=400, detail="User is not a teacher")
     return user
 
 @router.get("/students/me", response_model=UserStudentRead)
 def get_student_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user = auth_service.get_current_user(credentials.credentials, db)
-    print(user.__dict__)
-    print(user.student_info.__dict__)
+    if user.student_info is None:
+        raise HTTPException(status_code=400, detail="User is not a student")
     return user
 
 @router.post("/students/register", response_model=StudentInfoCreate)

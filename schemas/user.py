@@ -23,7 +23,7 @@ class UserInfoCreate(Model):
     phone_number: Optional[str]
 
 class UserRead(ReadModel):
-    role: int
+    role: str
     email: EmailStr
     last_signed_at: Optional[datetime.datetime]
     user_info: UserInfoRead
@@ -33,7 +33,7 @@ class UserRead(ReadModel):
 class UserCreate(Model):
     model_config = ConfigDict(from_attributes=True)
 
-    role: int
+    role: str
     email: EmailStr
     password_hash: str
     user_info: UserInfoCreate

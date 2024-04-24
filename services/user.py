@@ -5,6 +5,7 @@ from models import User, UserInfo, StudentInfo, TeacherInfo
 from utils import hash_password
 from sqlalchemy.orm import Session 
 from fastapi.encoders import jsonable_encoder
+from datetime import datetime
 from schemas import (
     UserCreate,
     UserUpdate,
@@ -30,7 +31,7 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
         user_info_id = user_info.id
         # then create user
         body.password_hash = hash_password(body.password_hash)
-        user = User(**body.dict(exclude={'user_info'}), user_info_id=user_info_id) 
+        user = User(**body.dict(exclude={'user_info'}), user_info_id=user_info_id, created_at=datetime.now(), updated_at=datetime.now()) 
         # user.password_hash = hash_password(body.password_hash)
         db.add(user)
         db.commit()
