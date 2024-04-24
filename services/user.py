@@ -40,7 +40,7 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
     def create_student_from_user(self, db: Session, body: StudentInfoCreateAttach):
         obj_in = jsonable_encoder(body)
         user = self.get_by_id(db, body.user_id)
-        if user.teacher_info is None:
+        if user.teacher_info is not None:
             return HTTPException(status_code=400, detail="TEACHER cannot be assigned as student")
         if user:
             if user.student_info is not None:
@@ -55,7 +55,7 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
     def create_teacher_from_user(self, db: Session, body: TeacherInfoCreateAttach):
         obj_in = jsonable_encoder(body)
         user = self.get_by_id(db, body.user_id)
-        if user.student_info is None:
+        if user.student_info is not None:
             return HTTPException(status_code=400, detail="STUDENT cannot be assigned as teacher")
         if user:
             if user.teacher_info is not None:
