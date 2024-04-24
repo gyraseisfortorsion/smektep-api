@@ -15,5 +15,5 @@ class ClassroomUser(Base):
     user_id = Column(ForeignKey('users.id'), nullable=False)
     role = Column(Enum('teacher', 'secondary_teacher', 'curator', 'moderator', 'admin', 'assistant', 'student', name='role'), nullable=False)
 
-    classroom = relationship('Classroom', back_populates='users')
+    classrooms = relationship('Classroom', back_populates='users')
     user = relationship('User', back_populates='classrooms')

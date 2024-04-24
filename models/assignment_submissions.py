@@ -18,5 +18,5 @@ class AssignmentSubmission(Model):
     pdf_url = Column(Text)
 
     assignment = relationship('Assignment', back_populates='assignment_submissions')
-    parent = relationship('AssignmentSubmission', remote_side=[id])
+    parent = relationship('AssignmentSubmission')
     student = relationship('User', back_populates='assignment_submissions')

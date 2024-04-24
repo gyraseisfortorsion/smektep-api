@@ -11,7 +11,7 @@ from datetime import datetime
 
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
 
-    async def generate_homework(subject, topic, grade_level, difficulty, quantity, extra_info):
+    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, extra_info=None):
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
