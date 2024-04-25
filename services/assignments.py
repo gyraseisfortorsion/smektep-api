@@ -18,36 +18,55 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         if subject.lower() == 'mathematics':
             # Generate answers
             if extra_info is not None:
-                answers = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
-                        {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3,...]) of {quantity} answers and NOTHING ELSE!"}
-                    ]
-                )
+                # answers = client.chat.completions.create(
+                #     model="gpt-4-turbo",
+                #     messages=[
+                #         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
+                #         {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3,...]) of {quantity} answers and NOTHING ELSE!"}
+                #     ]
+                # )
 
-                problems = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}"},
-                        {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
-                    ]
-                )
-            else:
-                answers = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
-                        {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3, ...]) of {quantity} answers and NOTHING ELSE!"}
-                    ]
-                )
+                # problems = client.chat.completions.create(
+                #     model="gpt-4-turbo",
+                #     messages=[
+                #         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}"},
+                #         {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
+                #     ]
+                # )
 
                 # Generate problems based on answers
                 problems = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4-turbo",
                     messages=[
                         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}"},
-                        {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
+                        {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
+                    ]
+                )
+
+                answers = client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}"},
+                        {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, ...]) of answers and NOTHING ELSE!"}
+                    ]
+                )
+            else:
+                
+
+                # Generate problems based on answers
+                problems = client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers."},
+                        {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
+                    ]
+                )
+
+                answers = client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers"},
+                        {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, ...]) of answers and NOTHING ELSE!"}
                     ]
                 )
 
