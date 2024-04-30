@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     ALGORITHM: str
     OPENAI_API_KEY: str
     PASSWORD: str
+    AWS_ACCESS_KEY1: str
+    AWS_SECRET_KEY1: str
 
     class Config:
         env_file = ".env"

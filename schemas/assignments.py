@@ -1,12 +1,40 @@
 from .base import Model, ReadModel
-import datetime
+from datetime import datetime
 import uuid
 from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 
+from enum import Enum
+
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
 
+class AssignmentType(str, Enum):
+    homework = 'homework'
+    quiz = 'quiz'
+    exam = 'exam'
+
 class AssignmentCreate(Model):
+    type: AssignmentType
+    date_from: Optional[datetime]
+    date_to: Optional[datetime]
+    classroom_id: uuid.UUID
+    description: Optional[str]
+    max_grade: Optional[float]
+    name: str
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+class AssignmentUpdate(Model):
+    type: AssignmentType
+    date_from: Optional[datetime]
+    date_to: Optional[datetime]
+    classroom_id: uuid.UUID
+    description: Optional[str]
+    max_grade: Optional[float]
+    name: str
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+class HomeworkCreate(Model):
     subject: str = "Mathematics"
     topic: str = "Algebra"
     grade_level: str = "9th"
@@ -14,11 +42,9 @@ class AssignmentCreate(Model):
     quantity: int = 5
     extra_info: Optional[str] = None
 
-class AssignmentUpdate(Model):
-    subject: Optional[str]
-    topic: Optional[str]
-    grade_level: Optional[str]
-    difficulty: Optional[int]
-    quantity: Optional[int]
-    extra_info: Optional[str] = None
+class HomeworkAssignmentCreate(Model):
+    assignment: AssignmentCreate
+    homework: HomeworkCreate
+
+
 

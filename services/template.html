@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .problem { margin-bottom: 20px; }
+        .answer { margin-bottom: 40px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Homework Problems</h1>
+    <div class="problems">
+        {{ problems|safe }}
+    </div>
+    <h2>Answers</h2>
+    <div class="answers">
+        {% for answer in answers %}
+            <div class="answer">Answer: {{ answer }}</div>
+        {% endfor %}
+    </div>
+</body>
+</html>

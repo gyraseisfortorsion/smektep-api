@@ -31,3 +31,9 @@ starlette==0.37.2
 tqdm==4.66.2
 typing_extensions==4.11.0
 uvicorn==0.29.0
+boto3
+botocore
+reportlab
+markdown2
+pdfkit
+Jinja2
