@@ -15,6 +15,7 @@ import markdown2
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
 
+
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
 
     async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
@@ -153,6 +154,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         rendered_html = template.render(problems=html_problems, answers=answers_list)
         
         # Convert to PDF
+        pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
         pdfkit.from_string(rendered_html, output_filename)
 
         print(f'PDF generated: {output_filename}')
