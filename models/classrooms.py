@@ -11,7 +11,7 @@ class Classroom(Model):
 
     name = Column(String)
     subject_id = Column(ForeignKey('subjects.id'))
-    school_id = Column(UUID)
+    school_id = Column(String())
 
     subject = relationship('Subject', back_populates='classrooms')
     users = relationship('ClassroomUser', back_populates='classrooms')

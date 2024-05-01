@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
 
-    async def prompt(self, subject: str, topic, grade_level, difficulty, quantity, extra_info=None):
+    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -86,7 +86,8 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
             # )
 
             return {"problems": problems.choices[0].message.content, 
-                    "answers": answers.choices[0].message.content}
+                    "answers": answers.choices[0].message.content,
+                    "user_id": user_id}
 
         else:
             if extra_info is not None:
@@ -167,23 +168,8 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         print(2.5)
         return filename
 
-    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, extra_info=None):
-        # Generate problems and answers
-        homework = await self.prompt(subject, topic, grade_level, difficulty, quantity, extra_info)
-        problems = homework['problems']
-        answers = homework['answers']
-
-        # Generate pdf from problems and answers
-        pdf = self.generate_pdf(problems, answers)
-        print(2)
-        # Upload pdf to s3
-        filename = await self.upload_pdf_to_s3(pdf)
-        print(3)
-
-        return filename
-    
     def create_homework(self, db: Session,
-               obj_in: HomeworkAssignmentCreate, pdf_url: str):
+               obj_in: AssignmentCreate, pdf_url: str):
         obj_in_data = jsonable_encoder(obj_in)
         obj_in_data['pdf_url'] = pdf_url
         obj_in_data['id'] = str(uuid.uuid4())
@@ -192,6 +178,15 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         db.flush()
         
         return db_obj
+    
+    async def approve_homework(self, homework: HomeworkAssignmentCreate, db: Session):
+        # Generate pdf from problems and answers
+        pdf = self.generate_pdf(homework.problems, homework.answers)
+        # Upload pdf to s3
+        filename = await self.upload_pdf_to_s3(pdf)
+        return self.create_homework(db, homework.assignment, filename)
+    
+
     # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
     #     pdf = self.generate_pdf_from_homework(problems, answers, subject)
     #     assignment = Assignment(type='homework', date_from=date_from, date_to=date_to, description=description, pdf_url=pdf, max_grade=100, name=max_grade, name=name, created_at=datetime.now(), updated_at=datetime.now())

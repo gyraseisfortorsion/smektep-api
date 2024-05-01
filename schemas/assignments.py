@@ -44,7 +44,9 @@ class HomeworkCreate(Model):
 
 class HomeworkAssignmentCreate(Model):
     assignment: AssignmentCreate
-    homework: HomeworkCreate
+    problems: str
+    answers: str
+    user_id: uuid.UUID
 
 
 

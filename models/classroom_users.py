@@ -9,8 +9,7 @@ import uuid
 
 class ClassroomUser(Base):
     __tablename__ = 'classroom_users'
-
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID, primary_key=True, default=lambda: str(uuid.uuid4()))
     classroom_id = Column(ForeignKey('classrooms.id'), nullable=False)
     user_id = Column(ForeignKey('users.id'), nullable=False)
     role = Column(Enum('teacher', 'secondary_teacher', 'curator', 'moderator', 'admin', 'assistant', 'student', name='role'), nullable=False)

@@ -7,6 +7,8 @@ from dateutil.relativedelta import relativedelta
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
 
 class UserInfoRead(ReadModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     first_name: str
     last_name: str
     father_name: Optional[str]
@@ -23,12 +25,12 @@ class UserInfoCreate(Model):
     phone_number: Optional[str]
 
 class UserRead(ReadModel):
+    model_config = ConfigDict(from_attributes=True)
+
     role: str
     email: EmailStr
     last_signed_at: Optional[datetime.datetime]
     user_info: UserInfoRead
-
-
 
 class UserCreate(Model):
     model_config = ConfigDict(from_attributes=True)
@@ -47,7 +49,7 @@ class UserUpdate(Model):
     user_info: Optional[UserInfoCreate]
 
 class StudentInfoRead(ReadModel):
-    # model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
     
     grade_level: int
     guardian_phone_number: str
@@ -90,7 +92,7 @@ class StudentInfoCreate(Model):
     user: UserCreate
 
 class UserStudentRead(UserRead):
-    # model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
     student_info: StudentInfoRead
 
 
@@ -112,4 +114,5 @@ class TeacherInfoCreateAttach(Model):
     user_id: uuid.UUID
 
 class UserTeacherRead(UserRead):
+    model_config = ConfigDict(from_attributes=True)
     teacher_info: TeacherInfoRead

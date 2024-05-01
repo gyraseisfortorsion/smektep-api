@@ -14,6 +14,7 @@ class Model(BaseModel):
 
 class NamedModel(Model):
     name: Optional[str]
+    nameRU: Optional[str] = Field(None, nullable=True)
     nameKZ: Optional[str] = Field(None, nullable=True)
 
     class Config:
