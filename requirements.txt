@@ -105,7 +105,6 @@ MarkupSafe==2.1.2
 matplotlib==3.7.1
 matplotlib-inline==0.1.6
 mistune==2.0.5
-modelhub-client==1.1.0
 mpmath==1.3.0
 multidict==6.0.4
 nbclassic==0.5.1
