@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     PASSWORD: str
     AWS_ACCESS_KEY1: str
     AWS_SECRET_KEY1: str
-
+    GOOGLE_API_KEY: str
     class Config:
         env_file = ".env"
 

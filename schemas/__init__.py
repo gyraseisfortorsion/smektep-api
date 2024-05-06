@@ -5,3 +5,4 @@ from .assignments import *
 from .classrooms import *
 from .subjects import *
 from .classroom_users import *
+from .assignment_submissions import *

@@ -1,5 +1,5 @@
 from openai import OpenAI
-from fastapi import FastAPI, HTTPException, Depends, status, Header
+from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile, File
 from core import settings
 from .base import ServiceBase
 from models import Assignment
@@ -111,33 +111,33 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         
 
 
-    def generate_pdf_from_homework(self, problems, answers, subject):
-        filename = f"{subject}_{datetime.now()}_homework.pdf"
-        c = canvas.Canvas(filename, pagesize=letter)
-        width, height = letter
+    # def generate_pdf_from_homework(self, problems, answers, subject):
+    #     filename = f"{subject}_{datetime.now()}_homework.pdf"
+    #     c = canvas.Canvas(filename, pagesize=letter)
+    #     width, height = letter
 
-        # Write problems
-        c.setFont("Helvetica", 12)
-        c.drawString(30, height - 50, "Problems:")
-        textobject = c.beginText()
-        textobject.setTextOrigin(30, height - 70)
-        textobject.setFont("Helvetica", 10)
-        for problem in problems:
-            textobject.textLine(problem)
-        c.drawText(textobject)
+    #     # Write problems
+    #     c.setFont("Helvetica", 12)
+    #     c.drawString(30, height - 50, "Problems:")
+    #     textobject = c.beginText()
+    #     textobject.setTextOrigin(30, height - 70)
+    #     textobject.setFont("Helvetica", 10)
+    #     for problem in problems:
+    #         textobject.textLine(problem)
+    #     c.drawText(textobject)
 
-        # Write answers
-        c.setFont("Helvetica", 12)
-        c.drawString(30, height - 120, "Answers:")
-        textobject = c.beginText()
-        textobject.setTextOrigin(30, height - 140)
-        textobject.setFont("Helvetica", 10)
-        for answer in answers:
-            textobject.textLine(answer)
-        c.drawText(textobject)
+    #     # Write answers
+    #     c.setFont("Helvetica", 12)
+    #     c.drawString(30, height - 120, "Answers:")
+    #     textobject = c.beginText()
+    #     textobject.setTextOrigin(30, height - 140)
+    #     textobject.setFont("Helvetica", 10)
+    #     for answer in answers:
+    #         textobject.textLine(answer)
+    #     c.drawText(textobject)
 
-        c.save()   
-        return filename
+    #     c.save()   
+    #     return filename
     
     def generate_pdf(self, problems, answers, output_filename='homework.pdf'):
         # Convert markdown problems to HTML
@@ -169,6 +169,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         await object_storage_service.s3_upload(file.read(), filename)
         print(2.5)
         return filename
+    
 
     def create_homework(self, db: Session,
                obj_in: AssignmentCreate, pdf_url: str):
@@ -188,6 +189,13 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         filename = await self.upload_pdf_to_s3(pdf)
         return self.create_homework(db, homework.assignment, filename)
     
+    async def create_from_pdf(self, body: AssignmentCreate, pdf: UploadFile, db: Session):
+        # Save the pdf to the local storage
+        with open(pdf.filename, 'wb') as f:
+            f.write(pdf.file.read())
+        # Upload pdf to s3
+        filename = await self.upload_pdf_to_s3(pdf.filename)
+        return self.create_homework(db, body, filename)
 
     # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
     #     pdf = self.generate_pdf_from_homework(problems, answers, subject)
