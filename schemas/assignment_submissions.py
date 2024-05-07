@@ -23,3 +23,14 @@ class AssignmentSubmissionResubmit(ReadModel):
     parent_id: Optional[uuid.UUID]
     commentaries: Optional[str]
     pdf_url: Optional[str]
+
+class AssignmentSubmissionReadShort(Model):
+    model_config = ConfigDict(from_attributes=True)
+    
+    student_id: uuid.UUID
+    submission_date: datetime
+    grade: Optional[float]
+    commentaries: Optional[str]
+    pdf_url: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

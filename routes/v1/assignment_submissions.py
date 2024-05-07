@@ -39,3 +39,4 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
         return await assignment_submission_service.check_submission(submission_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
+    

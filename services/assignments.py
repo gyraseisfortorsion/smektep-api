@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile,
 from core import settings
 from .base import ServiceBase
 from models import Assignment
-from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate
+from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort
 from datetime import datetime
 from .object_storage import object_storage_service
 from reportlab.lib.pagesizes import letter
@@ -192,6 +192,12 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     async def create_from_pdf(self, body: AssignmentCreate, filename: str, db: Session):
         return self.create_homework(db, body, filename)
     
+    def get_all_teacher_assignments(self, classroom_id: str, db: Session):
+        return db.query(Assignment).filter(Assignment.classroom_id == classroom_id).all()
+    
+    def get_all_student_assignments(self, classroom_id: str, user_id: str, db: Session):
+        assignments = db.query(Assignment).filter(Assignment.classroom_id == classroom_id).all()
+        return [AssignmentsStudentsReadShort.from_orm(assignment) for assignment in assignments]
 
 
     # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
