@@ -37,3 +37,4 @@ reportlab
 markdown2
 pdfkit
 Jinja2
+python-multipart==0.0.9
