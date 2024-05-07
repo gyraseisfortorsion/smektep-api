@@ -22,7 +22,8 @@ class ClassroomUserUpdate(Model):
     user_id: Optional[uuid.UUID]
     role: Optional[str]
 
-class ClassroomRead(Model):
+class ClassroomUserRead(Model):
+
     classroom_id: uuid.UUID
     user_id: uuid.UUID
     role: str

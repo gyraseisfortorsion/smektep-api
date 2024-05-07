@@ -154,7 +154,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         rendered_html = template.render(problems=html_problems, answers=answers_list)
         
         # Convert to PDF
-        pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
+        # pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
         pdfkit.from_string(rendered_html, output_filename)
 
         print(f'PDF generated: {output_filename}')

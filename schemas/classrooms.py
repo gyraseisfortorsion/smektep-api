@@ -22,6 +22,8 @@ class ClassroomUpdate(Model):
     school_id: uuid.UUID
 
 class ClassroomRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
     name: str
-    subject_id: SubjectRead
+    subject: SubjectRead
     school_id: uuid.UUID

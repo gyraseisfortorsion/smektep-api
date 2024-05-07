@@ -17,4 +17,5 @@ class SubjectUpdate(NamedModel):
     pass
 
 class SubjectRead(NamedModel, ReadModel):
+    model_config = ConfigDict(from_attributes=True)
     pass

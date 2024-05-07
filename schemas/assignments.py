@@ -13,6 +13,18 @@ class AssignmentType(str, Enum):
     quiz = 'quiz'
     exam = 'exam'
 
+class AssignmentRead(Model):
+    id: uuid.UUID
+    type: AssignmentType
+    date_from: Optional[datetime]
+    date_to: Optional[datetime]
+    classroom_id: uuid.UUID
+    description: Optional[str]
+    pdf_url: Optional[str]
+    max_grade: Optional[float]
+    name: str
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 class AssignmentCreate(Model):
     type: AssignmentType
     date_from: Optional[datetime]

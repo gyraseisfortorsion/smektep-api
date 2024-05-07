@@ -41,3 +41,4 @@ pdf2image==1.17.0
 google-ai-generativelanguage==0.6.2
 google-api-core==2.19.0
 google-api-python-client==2.127.0
+python-multipart==0.0.9

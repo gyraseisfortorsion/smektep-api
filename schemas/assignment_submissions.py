@@ -8,10 +8,11 @@ from enum import Enum
 
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
 
-class AssignmentSubmissionCreate(ReadModel):
+class AssignmentSubmissionCreate(Model):
     student_id: uuid.UUID
     assignment_id: uuid.UUID
     submission_date: datetime
+    pdf_url: Optional[str]
     commentaries: Optional[str]
 
 class AssignmentSubmissionMark(ReadModel):

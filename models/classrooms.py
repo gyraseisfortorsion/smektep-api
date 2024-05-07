@@ -14,5 +14,5 @@ class Classroom(Model):
     school_id = Column(String())
 
     subject = relationship('Subject', back_populates='classrooms')
-    users = relationship('ClassroomUser', back_populates='classrooms')
+    users = relationship('ClassroomUser', back_populates='classroom')
     assignments = relationship('Assignment', back_populates='classroom')

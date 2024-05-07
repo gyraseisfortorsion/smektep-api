@@ -29,3 +29,11 @@ def get_teacher_classrooms(teacher_id: str, credentials: HTTPAuthorizationCreden
         return classroom_users_service.get_teacher_classrooms(db, teacher_id)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view classrooms")
+
+@router.get("/student/{student_id}", response_model=List[ClassroomRead])
+def get_student_classrooms(student_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    # if auth_service.get_role(credentials.credentials)== "teacher":
+    #     return classroom_users_service.get_student_classrooms(db, student_id)
+    # else:
+    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view classrooms")
+    return classroom_users_service.get_student_classrooms(db, student_id)

@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 
 
 class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate]):
-    pass
+    def get_assignments(self, db: Session, classroom_id: str):
+        classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
+        return classroom.assignments
 
 classroom_service = ClassroomService(Classroom)

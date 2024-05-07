@@ -17,10 +17,11 @@ from pdf2image import convert_from_path
 import numpy as np
 import PIL
 from PIL import Image
+import pytz
 
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
-    async def submit(self, pdf: UploadFile,  body: AssignmentSubmissionCreate, user_id: str, db: Session):
+    def submit(self, body: AssignmentSubmissionCreate, user_id: str, db: Session):
         assignment = db.query(Assignment).filter(Assignment.id == body.assignment_id).first()
 
         student_classrooms = classroom_users_service.get_student_classrooms(db, user_id)
@@ -30,18 +31,18 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
         if assignment:
 
-            # UPLOAD PDF TO S3
-            filename_in_s3 = f"{assignment.id}/{pdf.filename}"
-            await object_storage_service.s3_upload(pdf, filename_in_s3)
+            # # UPLOAD PDF TO S3
+            # filename_in_s3 = f"{assignment.id}/{pdf.filename}"
+            # await object_storage_service.s3_upload(pdf, filename_in_s3)
 
-            if assignment.due_date < datetime.now():
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is past due date")
+            # if assignment.date_to.replace(tzinfo=pytz.UTC) < datetime.now(pytz.UTC):
+            #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is past due date")
             submission = AssignmentSubmission(
                 id = str(uuid.uuid4()),
                 student_id = user_id,
                 assignment_id=body.assignment_id,
                 submission_date=datetime.now(),
-                pdf_url=filename_in_s3,
+                pdf_url=body.pdf_url,
             )
             db.add(submission)
             db.commit()
@@ -89,7 +90,12 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         else:
             submissions = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).all()
             return submissions
-        
+    
+    async def upload(self, pdf: bytes, assignment_id: str, user_id: str, db: Session):
+        filename_in_s3 = f"{assignment_id}/{user_id}.pdf"
+        await object_storage_service.s3_upload(pdf, filename_in_s3)
+        return filename_in_s3
+    
     async def check_submission(self, submission_id: str, db: Session):
         # client = OpenAI(api_key=settings.OPENAI_API_KEY)
         genai.configure(api_key=settings.GOOGLE_API_KEY)
@@ -98,10 +104,11 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         pdf = await object_storage_service.s3_download(submission.pdf_url)
         # save pdf locally
-        with open(f"temp/{submission.pdf_url}", "wb") as f:
-            f.write(pdf)
+        # with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+        #     f.write(pdf)
         
-        images = convert_from_path(f"temp/{submission.pdf_url}")
+        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        images = convert_from_path('services/temp/5f85242d-c38f-426b-844c-b081e8e51be2.pdf')
         image_paths = []
         for i in range(len(images)):
         
@@ -119,7 +126,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
         # now do same but for the assignment pdf itself
         assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        images2 = convert_from_path(assignment_pdf_path)
+        images2 = convert_from_path('services/temp/fefe918c080b4a9ebbf257fb9cf56f6b.pdf')
         image_paths2 = []
         for i in range(len(images)):
         
@@ -144,7 +151,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         response = model.generate_content(
             glm.Content(
                 parts = [
-                    glm.Part(text="Describe content of the images"),
+                    glm.Part(text="Check the submitted work based on the provided answers, and provide detailed feedback and final mark"),
                     glm.Part(
                         inline_data=glm.Blob(
                             mime_type='image/jpeg',
