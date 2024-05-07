@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
@@ -30,3 +30,15 @@ async def approve_homework(homework: HomeworkAssignmentCreate, credentials: HTTP
         return hw
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can approve homework")
+    
+@router.post("/homework/create", description="Create a homework assignment from existing pdf")
+async def create_from_pdf(body: AssignmentCreate, pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    if auth_service.get_role(credentials.credentials)== "teacher":
+        hw = await assignment_service.create_from_pdf(body, pdf, db)
+        if not hw:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create homework")
+        return hw
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can create homework")
+    
+
