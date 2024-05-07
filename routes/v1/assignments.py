@@ -32,13 +32,24 @@ async def approve_homework(homework: HomeworkAssignmentCreate, credentials: HTTP
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can approve homework")
     
 @router.post("/homework/create", description="Create a homework assignment from existing pdf")
-async def create_from_pdf(body: AssignmentCreate, pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+async def create_from_pdf(body: AssignmentCreate, filename: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     if auth_service.get_role(credentials.credentials)== "teacher":
-        hw = await assignment_service.create_from_pdf(body, pdf, db)
+        hw = await assignment_service.create_from_pdf(body, filename, db)
         if not hw:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create homework")
         return hw
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can create homework")
     
+@router.post("/homework/upload", description="Upload a homework assignment")
+async def upload_homework(pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    # save pdf to local directory first
+    
+    if auth_service.get_role(credentials.credentials)== "teacher":
+        hw = await assignment_service.upload_pdf_to_s3(pdf.filename)
+        if not hw:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload homework")
+        return hw
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can upload homework")
 

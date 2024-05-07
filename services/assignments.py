@@ -189,13 +189,10 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         filename = await self.upload_pdf_to_s3(pdf)
         return self.create_homework(db, homework.assignment, filename)
     
-    async def create_from_pdf(self, body: AssignmentCreate, pdf: UploadFile, db: Session):
-        # Save the pdf to the local storage
-        with open(pdf.filename, 'wb') as f:
-            f.write(pdf.file.read())
-        # Upload pdf to s3
-        filename = await self.upload_pdf_to_s3(pdf.filename)
+    async def create_from_pdf(self, body: AssignmentCreate, filename: str, db: Session):
         return self.create_homework(db, body, filename)
+    
+
 
     # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
     #     pdf = self.generate_pdf_from_homework(problems, answers, subject)
