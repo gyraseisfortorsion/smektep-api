@@ -108,12 +108,12 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         #     f.write(pdf)
         
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path('services/temp/5f85242d-c38f-426b-844c-b081e8e51be2.pdf')
+        images = convert_from_path('services/5f85242d-c38f-426b-844c-b081e8e51be2.pdf')
         image_paths = []
         for i in range(len(images)):
         
             # Save pages as images in the pdf
-            image_path = 'temp/images/submission/'+ str(i) +'.jpg'
+            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
             image_paths.append(image_path)
             images[i].save(image_path, 'JPEG')
         imgs    = [Image.open(i) for i in image_paths]
@@ -125,15 +125,15 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         
 
         # now do same but for the assignment pdf itself
-        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        images2 = convert_from_path('services/temp/fefe918c080b4a9ebbf257fb9cf56f6b.pdf')
+        # assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path('services/fefe918c080b4a9ebbf257fb9cf56f6b.pdf')
         image_paths2 = []
         for i in range(len(images)):
         
             # Save pages as images in the pdf
-            image_path = 'temp/images/assignment/'+ str(i) +'.jpg'
-            image_paths.append(image_path)
-            images[i].save(image_path, 'JPEG')
+            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+            image_paths2.append(image_path)
+            images2[i].save(image_path, 'JPEG')
         imgs    = [Image.open(i) for i in image_paths]
         # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
         min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
@@ -167,6 +167,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 ],
             ),
             stream=True)
+        response.resolve()
         print(response.text)
         return response.text
 
