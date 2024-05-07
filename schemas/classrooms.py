@@ -4,7 +4,7 @@ import uuid
 from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from .subjects import SubjectRead
-
+from .user import UserInfoFullName
 from enum import Enum
 
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
@@ -25,5 +25,13 @@ class ClassroomRead(Model):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     name: str
+    subject: SubjectRead
+    school_id: uuid.UUID
+
+class ClassroomStudentRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    teacher: UserInfoFullName
     subject: SubjectRead
     school_id: uuid.UUID

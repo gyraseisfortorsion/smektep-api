@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import ClassroomUserCreate, ClassroomUserUpdate, UserStudentRead, ClassroomRead
+from schemas import ClassroomUserCreate, ClassroomUserUpdate, UserStudentRead, ClassroomRead, ClassroomStudentRead
 from services import auth_service, classroom_users_service
 from typing import List
 
@@ -30,7 +30,7 @@ def get_teacher_classrooms(teacher_id: str, credentials: HTTPAuthorizationCreden
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view classrooms")
 
-@router.get("/student/{student_id}", response_model=List[ClassroomRead])
+@router.get("/student/{student_id}", response_model=List[ClassroomStudentRead])
 def get_student_classrooms(student_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # if auth_service.get_role(credentials.credentials)== "teacher":
     #     return classroom_users_service.get_student_classrooms(db, student_id)

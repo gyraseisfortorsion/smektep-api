@@ -16,6 +16,12 @@ class UserInfoRead(ReadModel):
     gender: bool
     phone_number: Optional[str]
 
+class UserInfoFullName(Model):
+    model_config = ConfigDict(from_attributes=True)
+
+    first_name: str
+    last_name: str
+    father_name: Optional[str]
 class UserInfoCreate(Model):
     first_name: str
     last_name: str
