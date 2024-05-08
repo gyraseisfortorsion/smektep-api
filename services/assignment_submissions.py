@@ -18,6 +18,8 @@ import numpy as np
 import PIL
 from PIL import Image
 import pytz
+import shutil
+import os
 
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
@@ -76,7 +78,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
     
     async def get_assignment_from_submission(self, submission: AssignmentSubmission, db: Session):
         pdf = await object_storage_service.s3_download(submission.assignment.pdf_url)
-        path = f"temp/assignment_{submission.pdf_url}"
+        if not os.path.exists('services/temp/homeworks'):
+            os.makedirs('services/temp/homeworks')
+        path = f"services/temp/{submission.assignment.pdf_url}"
         with open(path, "wb") as f:
             f.write(pdf)
         return path
@@ -98,20 +102,26 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
     
     async def check_submission(self, submission_id: str, db: Session):
         # client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not os.path.exists('services/temp'):
+            os.makedirs('services/temp')
+
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         model = genai.GenerativeModel('gemini-pro-vision')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        print(submission.pdf_url)
         pdf = await object_storage_service.s3_download(submission.pdf_url)
         # save pdf locally
-        # with open(f"services/temp/{submission.pdf_url}", "wb") as f:
-        #     f.write(pdf)
-        
+        with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+            f.write(pdf)
+            
+        print(f"services/temp/{submission.pdf_url}")
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path('services/5f85242d-c38f-426b-844c-b081e8e51be2.pdf')
+        images = convert_from_path(f'services/temp/{submission.pdf_url}')
         image_paths = []
         for i in range(len(images)):
-        
+            if not os.path.exists('services/temp/images/submission'):
+                os.makedirs('services/temp/images/submission')
             # Save pages as images in the pdf
             image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
             image_paths.append(image_path)
@@ -125,11 +135,13 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         
 
         # now do same but for the assignment pdf itself
-        # assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        images2 = convert_from_path('services/fefe918c080b4a9ebbf257fb9cf56f6b.pdf')
+        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path(f'{assignment_pdf_path}')
         image_paths2 = []
         for i in range(len(images)):
-        
+            # create temp directory for images
+            if not os.path.exists('services/temp/images/assignment'):
+                os.makedirs('services/temp/images/assignment')
             # Save pages as images in the pdf
             image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
             image_paths2.append(image_path)
@@ -141,6 +153,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         imgs_comb = Image.fromarray( imgs_comb)
         imgs_comb.save( 'vertical_assignment.jpg' )
 
+        # cleanup temp directories after jpgs are generated
+        shutil.rmtree('services/temp')
 
         # assignment_image = Image.open('vertical_assignment.jpg')
         # submission_image = Image.open('vertical_submission.jpg')
