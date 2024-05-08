@@ -184,7 +184,16 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         response.resolve()
         print(response.text)
         return response.text
-    
+
+    def get_by_id(self, db: Session, id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == id).first()
+        if submission:
+            if submission.student_id == user_id:
+                return submission
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found") 
 
         
 assignment_submission_service = AssignmentSubmissionService(AssignmentSubmission)
