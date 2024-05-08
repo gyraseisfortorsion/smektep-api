@@ -144,8 +144,10 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         html_problems = markdown2.markdown(problems)
         
         # Prepare the answers list from the string
-        answers_list = eval(answers)
-        
+        try:
+            answers_list = eval(answers)
+        except:
+            answers_list = answers.split('\n')
         # Load template
         env = Environment(loader=FileSystemLoader('templates'))
         template = env.get_template('template.html')
@@ -206,5 +208,12 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     #     db.add(assignment)
     #     db.commit()
     #     return assignment
+
+    def get_student_assignment(self, assignment_id: str, user_id: str, db: Session):
+        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+        if assignment:
+            return assignment
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
 
 assignment_service = AssignmentService(Assignment)
