@@ -26,7 +26,7 @@ class AssignmentSubmissionResubmit(ReadModel):
 
 class AssignmentSubmissionReadShort(Model):
     model_config = ConfigDict(from_attributes=True)
-    
+
     student_id: uuid.UUID
     submission_date: datetime
     grade: Optional[float]
@@ -34,3 +34,4 @@ class AssignmentSubmissionReadShort(Model):
     pdf_url: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+

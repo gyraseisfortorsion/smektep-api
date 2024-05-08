@@ -68,3 +68,11 @@ def get_all_student_assignments(classroom_id: str, credentials: HTTPAuthorizatio
         return assignment_service.get_all_student_assignments(classroom_id, user_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view homework")
+    
+# @router.get("/student/{assignment_id}", description="Get assignment details for student")
+# def get_student_assignment(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+#     user_id = auth_service.get_current_user(credentials.credentials, db).id
+#     if auth_service.get_role(credentials.credentials)== "student":
+#         return assignment_service.get_student_assignment(assignment_id, user_id, db)
+#     else:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view homework")

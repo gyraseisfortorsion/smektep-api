@@ -76,4 +76,30 @@ class AssignmentsStudentsReadShort(Model):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
+class AssignmentsReadShort(Model):
+    model_config = ConfigDict(from_attributes=True)
+
+    type: AssignmentType
+    date_from: Optional[datetime]
+    date_to: Optional[datetime]
+    classroom_id: uuid.UUID
+    description: Optional[str]
+    pdf_url: Optional[str]
+    max_grade: Optional[float]
+    name: str
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+class AssignmentSubmissionRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+    
+    student_id: uuid.UUID
+    submission_date: datetime
+    grade: Optional[float]
+    commentaries: Optional[str]
+    pdf_url: Optional[str]
+    assignment: AssignmentsReadShort
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
 

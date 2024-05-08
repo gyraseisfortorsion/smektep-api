@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentSubmissionCreate, AssignmentSubmissionResubmit, AssignmentSubmissionMark
+from schemas import AssignmentSubmissionCreate, AssignmentSubmissionResubmit, AssignmentSubmissionMark, AssignmentSubmissionRead
 from services import assignment_service, auth_service, assignment_submission_service
 
 router = APIRouter(prefix="/assignments", tags=["Assignments Submissions"])
@@ -40,10 +40,10 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
     
-@router.get("/{submission_id}", description="Get a submission details by id")
-def get_submission(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+@router.get("/{assignment_id}", response_model = AssignmentSubmissionRead, description="Get a submission details by id")
+def get_submission(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "student":
-        return assignment_submission_service.get_by_id(db, submission_id, user_id)
+        return assignment_submission_service.get_by_id(db, assignment_id, user_id)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view submissions")

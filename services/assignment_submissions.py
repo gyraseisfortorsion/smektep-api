@@ -185,8 +185,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         print(response.text)
         return response.text
 
-    def get_by_id(self, db: Session, id: str, user_id: str) -> AssignmentSubmission:
-        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == id).first()
+    def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
         if submission:
             if submission.student_id == user_id:
                 return submission
