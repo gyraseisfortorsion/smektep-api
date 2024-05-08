@@ -54,8 +54,7 @@ class HomeworkCreate(Model):
     quantity: int = 5
     extra_info: Optional[str] = None
 
-class HomeworkAssignmentCreate(Model):
-    assignment: AssignmentCreate
+class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
     answers: str
     user_id: uuid.UUID

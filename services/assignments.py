@@ -174,10 +174,14 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     
 
     def create_homework(self, db: Session,
-               obj_in: AssignmentCreate, pdf_url: str):
+               obj_in: HomeworkAssignmentCreate, pdf_url: str):
         obj_in_data = jsonable_encoder(obj_in)
         obj_in_data['pdf_url'] = pdf_url
         obj_in_data['id'] = str(uuid.uuid4())
+
+        # remove problems and answers from the dict
+        obj_in_data.pop('problems')
+        obj_in_data.pop('answers')
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.flush()
@@ -189,7 +193,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         pdf = self.generate_pdf(homework.problems, homework.answers)
         # Upload pdf to s3
         filename = await self.upload_pdf_to_s3(pdf)
-        return self.create_homework(db, homework.assignment, filename)
+        return self.create_homework(db, homework, filename)
     
     async def create_from_pdf(self, body: AssignmentCreate, filename: str, db: Session):
         return self.create_homework(db, body, filename)
