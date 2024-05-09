@@ -45,7 +45,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}"},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -53,7 +53,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 answers = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}"},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, \"2x\"...]) of answers and NOTHING ELSE!, DO NOT FORGET TO ENCLOSE ALL ANSWERS IN QUOTES!"}
                     ]
                 )
@@ -64,7 +64,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -72,7 +72,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 answers = client.chat.completions.create(
                     model="gpt-4-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers"},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, ...]) of answers and NOTHING ELSE!"}
                     ]
                 )
@@ -95,7 +95,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 client = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Generate a {topic} homework. Also account for this: {extra_info}"}
                     ]
                 )
@@ -103,7 +103,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 client = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in russian, even if the question is in english."},
                         {"role": "user", "content": f"Generate a {topic} homework."}
                     ]
                 )

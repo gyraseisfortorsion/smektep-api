@@ -52,7 +52,7 @@ def get_submissions(assignment_id: str, credentials: HTTPAuthorizationCredential
 async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":
-        return await assignment_submission_service.check_submission(submission_id, db)
+        return await assignment_submission_service.check_submission_gpt(submission_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
     

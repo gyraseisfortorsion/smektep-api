@@ -21,6 +21,8 @@ import pytz
 import shutil
 import os
 from models import ClassroomUser
+import openai
+import base64
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
     def submit(self, body: AssignmentSubmissionCreate, user_id: str, db: Session):
@@ -173,9 +175,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         # response.resolve()
 
         response = model.generate_content(
+            
             glm.Content(
                 parts = [
-                    glm.Part(text="Check the submitted work based on the provided answers, and provide detailed feedback and final mark"),
+                    glm.Part(text="Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN."),
                     glm.Part(
                         inline_data=glm.Blob(
                             mime_type='image/jpeg',
@@ -190,10 +193,118 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                     ),
                 ],
             ),
+            generation_config=genai.types.GenerationConfig(
+            max_output_tokens=100),
             stream=True)
         response.resolve()
         print(response.text)
         return response.text
+    
+    async def check_submission_gpt(self, submission_id: str, db: Session):
+        # ... rest of your code ...
+        # client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not os.path.exists('services/temp'):
+            os.makedirs('services/temp')
+
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
+        model = genai.GenerativeModel('gemini-pro-vision')
+        # get pds submission from s3
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        print(submission.pdf_url)
+        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        # save pdf locally
+        with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+            f.write(pdf)
+            
+        print(f"services/temp/{submission.pdf_url}")
+        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        images = convert_from_path(f'services/temp/{submission.pdf_url}')
+        image_paths = []
+        for i in range(len(images)):
+            if not os.path.exists('services/temp/images/submission'):
+                os.makedirs('services/temp/images/submission')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+            image_paths.append(image_path)
+            images[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_submission.jpg' )
+        
+
+        # now do same but for the assignment pdf itself
+        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path(f'{assignment_pdf_path}')
+        image_paths2 = []
+        for i in range(len(images)):
+            # create temp directory for images
+            if not os.path.exists('services/temp/images/assignment'):
+                os.makedirs('services/temp/images/assignment')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+            image_paths2.append(image_path)
+            images2[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_assignment.jpg' )
+
+        # cleanup temp directories after jpgs are generated
+        shutil.rmtree('services/temp')
+        # Initialize OpenAI API
+        openai.api_key = settings.OPENAI_API_KEY
+
+        # Convert images to base64
+        with open('vertical_assignment.jpg', 'rb') as f:
+            assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+        with open('vertical_submission.jpg', 'rb') as f:
+            submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+
+        # # Generate prompt
+        # prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
+
+        # # Call OpenAI API
+        # response = openai.Completion.create(
+        #     engine="text-davinci-002",
+        #     prompt=prompt,
+        #     max_tokens=500
+        # )
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.",
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{assignment_image_base64 }",
+                },
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                   "url": f"data:image/jpeg;base64,{submission_image_base64}",
+                },
+                },
+            ],
+            }
+        ],
+        max_tokens=600,
+        )
+
+        print(response.choices[0].message.content)
+        return response.choices[0].message.content
 
     def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
