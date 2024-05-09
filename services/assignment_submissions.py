@@ -274,6 +274,27 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         #     prompt=prompt,
         #     max_tokens=500
         # )
+
+        transcribed_submission = model.generate_content(
+            
+            glm.Content(
+                parts = [
+                    glm.Part(text="First count how many answers are there, based on this count list all of the answers of the student, just the answers, if student couldnt solve or omitted the problem indicate that. REPLY IN RUSSIAN."),
+                    glm.Part(
+                        inline_data=glm.Blob(
+                            mime_type='image/jpeg',
+                            data=pathlib.Path('vertical_submission.jpg').read_bytes()
+                        )
+                    ),
+                    
+                ],
+            ),
+            # generation_config=genai.types.GenerationConfig(
+            # max_output_tokens=0),
+            stream=True)
+        transcribed_submission.resolve()
+        print(transcribed_submission.text)
+
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
         model="gpt-4-turbo",
@@ -283,13 +304,11 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             "content": [
                 {
                 "type": "text",
-                "text": "Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.",
+                "text": "Check the submitted work based on the provided answers, and provide detailed feedback and final mark. Be sure to pay attention on student's answers and the correct answer list. Last image is the image with assignement and correct answers. DONT FORGET TO PROVIDE FINAL MARK, IF ANY OF THE PROBLEMS OR QUESTIONS LEFT UNANSWERED IT MEANS NO POINT FOR THAT OR JUST INCORRECT ANSWER. REPLY IN RUSSIAN.",
                 },
                 {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{assignment_image_base64 }",
-                },
+                "type": "text",
+                "text": transcribed_submission.text,
                 },
                 {
                 "type": "image_url",
@@ -297,10 +316,16 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                    "url": f"data:image/jpeg;base64,{submission_image_base64}",
                 },
                 },
+                {
+                "type": "image_url",
+                "image_url": {
+                   "url": f"data:image/jpeg;base64,{assignment_image_base64}",
+                },
+                },
             ],
             }
         ],
-        max_tokens=600,
+        max_tokens=800,
         )
 
         print(response.choices[0].message.content)
