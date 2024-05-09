@@ -37,13 +37,14 @@ class AssignmentSubmissionReadShort(Model):
 
 class AssignmentSubmissionReadTeacher(Model):
     model_config = ConfigDict(from_attributes=True)
-
+    
+    id: uuid.UUID
     student_id: uuid.UUID
     submission_date: datetime
     grade: Optional[float]
     commentaries: Optional[str]
     pdf_url: Optional[str]
-    student: StudentNameRead
+    student_info: StudentNameRead
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 

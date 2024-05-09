@@ -93,6 +93,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
         else:
             submissions = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).all()
+            for submission in submissions:
+                submission.student_info = submission.student.user_info
             return submissions
     
     async def upload(self, pdf: bytes, assignment_id: str, user_id: str, db: Session):
@@ -198,7 +200,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
     def download(self, submission_id: str, user_id: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
 
-        classroom_user = db.Query(ClassroomUser).filter(ClassroomUser.user_id ==  user_id, ClassroomUser.classroom_id==submission.assignment.classroom_id).first()
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id ==  user_id, ClassroomUser.classroom_id==submission.assignment.classroom_id).first()
         if submission:
             if classroom_user:
                 if classroom_user.role == "teacher":
