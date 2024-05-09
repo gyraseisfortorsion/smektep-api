@@ -66,10 +66,18 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
 
-    def mark(self, body: AssignmentSubmissionMark, db: Session):
+    def mark(self, body: AssignmentSubmissionMark, user_id: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == body.submission_id).first()
+        assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id, ClassroomUser.classroom_id == assignment.classroom_id).first()
+        if not classroom_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+        if not classroom_user.role == "teacher":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only teachers can mark assignments")
+        if body.grade > assignment.max_grade:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Grade is higher than the max grade for the assignment")
         if submission:
-            submission.marks = body.marks
+            submission.grade = body.grade
             db.commit()
             db.refresh(submission)
             return submission

@@ -16,6 +16,7 @@ class AssignmentSubmissionCreate(Model):
     commentaries: Optional[str]
 
 class AssignmentSubmissionMark(ReadModel):
+    id: uuid.UUID
     grade: float
 
 class AssignmentSubmissionResubmit(ReadModel):
@@ -37,7 +38,7 @@ class AssignmentSubmissionReadShort(Model):
 
 class AssignmentSubmissionReadTeacher(Model):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: uuid.UUID
     student_id: uuid.UUID
     submission_date: datetime

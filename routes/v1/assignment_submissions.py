@@ -63,3 +63,11 @@ def get_submission(assignment_id: str, credentials: HTTPAuthorizationCredentials
         return assignment_submission_service.get_by_id(db, assignment_id, user_id)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view submissions")
+    
+@router.patch("/mark")
+def mark(body: AssignmentSubmissionMark, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials)== "teacher":
+        return assignment_submission_service.mark(body, user_id, db)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can mark assignments")
