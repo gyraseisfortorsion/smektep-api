@@ -16,7 +16,6 @@ class AssignmentSubmissionCreate(Model):
     commentaries: Optional[str]
 
 class AssignmentSubmissionMark(ReadModel):
-    id: uuid.UUID
     grade: float
 
 class AssignmentSubmissionResubmit(ReadModel):

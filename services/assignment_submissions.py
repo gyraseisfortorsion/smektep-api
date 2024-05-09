@@ -67,7 +67,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
 
     def mark(self, body: AssignmentSubmissionMark, user_id: str, db: Session):
-        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == body.submission_id).first()
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == body.id).first()
         assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
         classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id, ClassroomUser.classroom_id == assignment.classroom_id).first()
         if not classroom_user:
