@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentSubmissionCreate, AssignmentSubmissionResubmit, AssignmentSubmissionMark, AssignmentSubmissionRead
+from typing import List
+from schemas import AssignmentSubmissionCreate, AssignmentSubmissionResubmit, AssignmentSubmissionMark, AssignmentSubmissionRead, AssignmentSubmissionReadTeacher
 from services import assignment_service, auth_service, assignment_submission_service
 
 router = APIRouter(prefix="/assignments", tags=["Assignments Submissions"])
@@ -24,7 +25,7 @@ def submit(assignment: AssignmentSubmissionCreate, credentials: HTTPAuthorizatio
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can submit assignments")
     
-@router.get("/submissions/{assignment_id}")
+@router.get("/submissions/{assignment_id}", response_model = List[AssignmentSubmissionReadTeacher], description="Get all submissions for an assignment")
 def get_submissions(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":

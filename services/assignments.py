@@ -182,6 +182,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         # remove problems and answers from the dict
         obj_in_data.pop('problems')
         obj_in_data.pop('answers')
+        obj_in_data.pop('user_id')
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.flush()

@@ -122,3 +122,10 @@ class TeacherInfoCreateAttach(Model):
 class UserTeacherRead(UserRead):
     model_config = ConfigDict(from_attributes=True)
     teacher_info: TeacherInfoRead
+
+class StudentNameRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+    
+    first_name: str
+    last_name: str
+    father_name: Optional[str]
