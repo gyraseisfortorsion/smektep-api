@@ -52,6 +52,20 @@ async def upload_homework(pdf: UploadFile = File(...), credentials: HTTPAuthoriz
         return hw
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can upload homework")
+
+@router.get("/homework/download/{assignment_id}", description="Download a homework assignment")
+async def download_homework(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    hw = await assignment_service.download_pdf_from_s3(assignment_id, user_id, db)
+    if not hw:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to download homework")
+    return Response(
+            content=hw,
+            headers={
+                'Content-Disposition': f'attachment;filename={assignment_id}.pdf',
+                'Content-Type': 'application/octet-stream',
+            }
+        )
     
 @router.get("/teacher/{classroom_id}", description="Get all assignments for a classroom FOR TEACHER")
 def get_all_teacher_assignments(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):

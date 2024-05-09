@@ -2,7 +2,7 @@ from openai import OpenAI
 from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile, File
 from core import settings
 from .base import ServiceBase
-from models import Assignment
+from models import Assignment, ClassroomUser
 from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort
 from datetime import datetime
 from .object_storage import object_storage_service
@@ -214,11 +214,19 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     #     db.commit()
     #     return assignment
 
-    def get_student_assignment(self, assignment_id: str, user_id: str, db: Session):
+    # def get_student_assignment(self, assignment_id: str, user_id: str, db: Session):
+    #     assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+    #     if assignment:
+    #         return assignment
+    #     else:
+    #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+        
+    async def download_pdf_from_s3(self, assignment_id: str, user_id: str, db: Session):
         assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-        if assignment:
-            return assignment
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == assignment.classroom_id, ClassroomUser.user_id == user_id).first()
+        if classroom_user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
+
+        return await object_storage_service.s3_download(assignment.pdf_url)
 
 assignment_service = AssignmentService(Assignment)

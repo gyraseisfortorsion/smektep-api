@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
@@ -24,6 +24,21 @@ def submit(assignment: AssignmentSubmissionCreate, credentials: HTTPAuthorizatio
         return assignment_submission_service.submit(assignment, user_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can submit assignments")
+
+@router.get("/download/{submission_id}")
+async def download(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    pdf = await assignment_submission_service.download(submission_id, user_id, db)
+    if pdf:
+        return Response(
+            content=pdf,
+            headers={
+                'Content-Disposition': f'attachment;filename={submission_id}.pdf',
+                'Content-Type': 'application/octet-stream',
+            }
+        )
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     
 @router.get("/submissions/{assignment_id}", response_model = List[AssignmentSubmissionReadTeacher], description="Get all submissions for an assignment")
 def get_submissions(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
