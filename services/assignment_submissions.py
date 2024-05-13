@@ -306,10 +306,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 "type": "text",
                 "text": "First of all be sure to pay attention on student's answers and the correct answer list. Last image is the image with assignement and correct answers. Check the submitted work based on the provided answers, and provide detailed feedback and final mark. DONT FORGET TO PROVIDE FINAL MARK, IF ANY OF THE PROBLEMS OR QUESTIONS LEFT UNANSWERED IT MEANS NO POINT FOR THAT OR JUST INCORRECT ANSWER. REPLY IN RUSSIAN.",
                 },
-                {
-                "type": "text",
-                "text": transcribed_submission.text,
-                },
+                # {
+                # "type": "text",
+                # "text": transcribed_submission.text,
+                # },
                 {
                 "type": "image_url",
                 "image_url": {

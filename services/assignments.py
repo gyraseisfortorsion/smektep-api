@@ -228,5 +228,13 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
 
         return await object_storage_service.s3_download(assignment.pdf_url)
+    
+    def get_student_assignment(classroom_id: str, assignment_id: str, user_id: str, db: Session):
+        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == classroom_id, ClassroomUser.user_id == user_id).first()
+        if classroom_user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
+        return assignment
+
 
 assignment_service = AssignmentService(Assignment)
