@@ -10,7 +10,7 @@ class AssignmentSubmission(Model):
     __tablename__ = 'assignment_submissions'
 
     student_id = Column(ForeignKey('users.id'), nullable=False)
-    assignment_id = Column(ForeignKey('assignments.id'), nullable=False)
+    assignment_id = Column(ForeignKey('assignments.id', ondelete='CASCADE'), nullable=False)
     submission_date = Column(DateTime(True))
     parent_id = Column(ForeignKey('assignment_submissions.id'))
     grade = Column(Float(53))
