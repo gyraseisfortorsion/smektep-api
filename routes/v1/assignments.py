@@ -98,6 +98,14 @@ def get_teacher_assignment(classroom_id: str, assignment_id: str, credentials: H
         return assignment_service.get_teacher_assignment(classroom_id, assignment_id, user_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view homework")
+    
+@router.get("/delete/{assignment_id}", description="Get all students for an assignment FOR TEACHER")
+def delete_assignment(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials)== "teacher":
+        return assignment_service.delete(assignment_id, user_id, db)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can delete homework")
 # @router.get("/student/{assignment_id}", description="Get assignment details for student")
 # def get_student_assignment(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
 #     user_id = auth_service.get_current_user(credentials.credentials, db).id

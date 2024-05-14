@@ -242,6 +242,20 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         if classroom_user is None or classroom_user.role != "teacher":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
         return assignment
+    
+    def delete(self, assignment_id: str, teacher_id: str, db):
+        assignment = db.query(Assignment).filter(Assignment.id==assignment_id).first()
+
+        if not assignment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+        
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == assignment.classroom_id, ClassroomUser.user_id == teacher_id).first()
+        if not classroom_user or classroom_user.role != "teacher":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
+        
+        db.delete(assignment)
+        db.commit()
+        return "success"
 
 
 assignment_service = AssignmentService(Assignment)
