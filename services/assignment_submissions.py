@@ -275,25 +275,25 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         #     max_tokens=500
         # )
 
-        transcribed_submission = model.generate_content(
+        # transcribed_submission = model.generate_content(
             
-            glm.Content(
-                parts = [
-                    glm.Part(text="First count how many answers are there, based on this count list all of the answers of the student, just the answers, if student couldnt solve or omitted the problem indicate that. REPLY IN RUSSIAN."),
-                    glm.Part(
-                        inline_data=glm.Blob(
-                            mime_type='image/jpeg',
-                            data=pathlib.Path('vertical_submission.jpg').read_bytes()
-                        )
-                    ),
+        #     glm.Content(
+        #         parts = [
+        #             glm.Part(text="First count how many answers are there, based on this count list all of the answers of the student, just the answers, if student couldnt solve or omitted the problem indicate that. REPLY IN RUSSIAN."),
+        #             glm.Part(
+        #                 inline_data=glm.Blob(
+        #                     mime_type='image/jpeg',
+        #                     data=pathlib.Path('vertical_submission.jpg').read_bytes()
+        #                 )
+        #             ),
                     
-                ],
-            ),
-            # generation_config=genai.types.GenerationConfig(
-            # max_output_tokens=0),
-            stream=True)
-        transcribed_submission.resolve()
-        print(transcribed_submission.text)
+        #         ],
+        #     ),
+        #     # generation_config=genai.types.GenerationConfig(
+        #     # max_output_tokens=0),
+        #     stream=True)
+        # transcribed_submission.resolve()
+        # print(transcribed_submission.text)
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
