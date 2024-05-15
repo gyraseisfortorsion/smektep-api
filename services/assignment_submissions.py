@@ -236,44 +236,44 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         
 
         # now do same but for the assignment pdf itself
-        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        images2 = convert_from_path(f'{assignment_pdf_path}')
-        image_paths2 = []
-        for i in range(len(images)):
-            # create temp directory for images
-            if not os.path.exists('services/temp/images/assignment'):
-                os.makedirs('services/temp/images/assignment')
-            # Save pages as images in the pdf
-            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
-            image_paths2.append(image_path)
-            images2[i].save(image_path, 'JPEG')
-        imgs    = [Image.open(i) for i in image_paths]
-        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
-        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
-        imgs_comb = Image.fromarray( imgs_comb)
-        imgs_comb.save( 'vertical_assignment.jpg' )
+        # assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        # images2 = convert_from_path(f'{assignment_pdf_path}')
+        # image_paths2 = []
+        # for i in range(len(images)):
+        #     # create temp directory for images
+        #     if not os.path.exists('services/temp/images/assignment'):
+        #         os.makedirs('services/temp/images/assignment')
+        #     # Save pages as images in the pdf
+        #     image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+        #     image_paths2.append(image_path)
+        #     images2[i].save(image_path, 'JPEG')
+        # imgs    = [Image.open(i) for i in image_paths]
+        # # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        # min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        # imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        # imgs_comb = Image.fromarray( imgs_comb)
+        # imgs_comb.save( 'vertical_assignment.jpg' )
 
         # cleanup temp directories after jpgs are generated
         shutil.rmtree('services/temp')
         # Initialize OpenAI API
         openai.api_key = settings.OPENAI_API_KEY
 
-        # Convert images to base64
-        with open('vertical_assignment.jpg', 'rb') as f:
-            assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+        # # Convert images to base64
+        # with open('vertical_assignment.jpg', 'rb') as f:
+        #     assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
         with open('vertical_submission.jpg', 'rb') as f:
             submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
 
         # Generate prompt
-        prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
+        # prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
 
-        # Call OpenAI API
-        response = openai.Completion.create(
-            engine="text-davinci-002",
-            prompt=prompt,
-            max_tokens=500
-        )
+        # # Call OpenAI API
+        # response = openai.Completion.create(
+        #     engine="text-davinci-002",
+        #     prompt=prompt,
+        #     max_tokens=500
+        # )
 
         transcribed_submission = model.generate_content(
             
@@ -294,7 +294,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             stream=True)
         transcribed_submission.resolve()
         print(transcribed_submission.text)
-
+        assignment_description = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first().description
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
         model="gpt-4o",
@@ -308,7 +308,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 },
                 {
                 "type": "text",
-                "text": transcribed_submission.text,
+                "text": f"Here is the transcribed solution of the student: {transcribed_submission.text}",
                 },
                 {
                 "type": "image_url",
@@ -317,11 +317,15 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 },
                 },
                 {
-                "type": "image_url",
-                "image_url": {
-                   "url": f"data:image/jpeg;base64,{assignment_image_base64}",
+                "type": "text",
+                "text": f"Here is the assignment itself: {assignment_description}",
                 },
-                },
+                # {
+                # "type": "image_url",
+                # "image_url": {
+                #    "url": f"data:image/jpeg;base64,{assignment_image_base64}",
+                # },
+                # },
             ],
             }
         ],
