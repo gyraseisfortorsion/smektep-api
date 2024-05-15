@@ -213,8 +213,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         print(submission.pdf_url)
         pdf = await object_storage_service.s3_download(submission.pdf_url)
         # save pdf locally
-        with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+        pdf_filename = submission.pdf_url.replace('/', '_')
+        with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
+        
             
         print(f"services/temp/{submission.pdf_url}")
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
