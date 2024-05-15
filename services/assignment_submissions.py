@@ -218,9 +218,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             f.write(pdf)
         
             
-        print(f"services/temp/{submission.pdf_url}")
+        print(f"services/temp/{pdf_filename}")
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path(f'services/temp/{submission.pdf_url}')
+        images = convert_from_path(f'services/temp/{pdf_filename}')
         image_paths = []
         for i in range(len(images)):
             if not os.path.exists('services/temp/images/submission'):
