@@ -60,7 +60,7 @@ class HomeworkCreate(Model):
 
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
-    answers: Optional[str]
+    answers: Optional[str] = None
     user_id: uuid.UUID
 
 
