@@ -21,6 +21,8 @@ class Assignment(Model):
     name = Column(String, nullable=False)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    answers = Column(Text)
+    problems = Column(Text)
 
     classroom = relationship('Classroom', back_populates='assignments')
     assignment_submissions = relationship('AssignmentSubmission', back_populates='assignment')

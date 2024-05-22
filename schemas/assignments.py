@@ -23,6 +23,8 @@ class AssignmentRead(Model):
     pdf_url: Optional[str]
     max_grade: Optional[float]
     name: str
+    problems: Optional[str]
+    answers: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 class AssignmentCreate(Model):
@@ -42,7 +44,9 @@ class AssignmentUpdate(Model):
     classroom_id: uuid.UUID
     description: Optional[str]
     max_grade: Optional[float]
-    name: str
+    name: Optional[str]
+    problems: Optional[str]
+    answers: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
@@ -71,6 +75,7 @@ class AssignmentsStudentsReadShort(Model):
     pdf_url: Optional[str]
     max_grade: Optional[float]
     name: str
+    problems: Optional[str]
     assignment_submissions: List[AssignmentSubmissionReadShort]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
@@ -86,6 +91,7 @@ class AssignmentsReadShort(Model):
     pdf_url: Optional[str]
     max_grade: Optional[float]
     name: str
+    problems: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
