@@ -63,6 +63,7 @@ class HomeworkAssignmentCreate(AssignmentCreate):
     answers: Optional[str]
     user_id: uuid.UUID
 
+
 class AssignmentsStudentsReadShort(Model):
     model_config = ConfigDict(from_attributes=True)
 
