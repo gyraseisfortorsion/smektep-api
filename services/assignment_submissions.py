@@ -238,23 +238,23 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         
 
         # now do same but for the assignment pdf itself
-        # assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        # images2 = convert_from_path(f'{assignment_pdf_path}')
-        # image_paths2 = []
-        # for i in range(len(images)):
-        #     # create temp directory for images
-        #     if not os.path.exists('services/temp/images/assignment'):
-        #         os.makedirs('services/temp/images/assignment')
-        #     # Save pages as images in the pdf
-        #     image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
-        #     image_paths2.append(image_path)
-        #     images2[i].save(image_path, 'JPEG')
-        # imgs    = [Image.open(i) for i in image_paths]
-        # # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-        # min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
-        # imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
-        # imgs_comb = Image.fromarray( imgs_comb)
-        # imgs_comb.save( 'vertical_assignment.jpg' )
+        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path(f'{assignment_pdf_path}')
+        image_paths2 = []
+        for i in range(len(images)):
+            # create temp directory for images
+            if not os.path.exists('services/temp/images/assignment'):
+                os.makedirs('services/temp/images/assignment')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+            image_paths2.append(image_path)
+            images2[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_assignment.jpg' )
 
         # cleanup temp directories after jpgs are generated
         shutil.rmtree('services/temp')
@@ -262,8 +262,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         openai.api_key = settings.OPENAI_API_KEY
 
         # # Convert images to base64
-        # with open('vertical_assignment.jpg', 'rb') as f:
-        #     assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+        with open('vertical_assignment.jpg', 'rb') as f:
+            assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
         with open('vertical_submission.jpg', 'rb') as f:
             submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
 
@@ -297,11 +297,11 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         transcribed_submission.resolve()
         print(transcribed_submission.text)
 
-        assignment_description = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first().description
+        assignment_problems = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first().description
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[
+                messages=[
             {
             "role": "user",
             "content": [
@@ -321,7 +321,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 },
                 {
                 "type": "text",
-                "text": f"Here is the assignment itself: {assignment_description}",
+                "text": f"Here is the assignment itself: {assignment_problems}",
                 },
                 # {
                 # "type": "image_url",
