@@ -25,4 +25,4 @@ class Assignment(Model):
     problems = Column(Text)
 
     classroom = relationship('Classroom', back_populates='assignments')
-    assignment_submissions = relationship('AssignmentSubmission', back_populates='assignment')
+    assignment_submissions = relationship('AssignmentSubmission', back_populates='assignment', cascade='all, delete')
