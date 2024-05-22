@@ -60,7 +60,7 @@ class HomeworkCreate(Model):
 
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
-    answers: str
+    answers: Optional[str]
     user_id: uuid.UUID
 
 class AssignmentsStudentsReadShort(Model):
