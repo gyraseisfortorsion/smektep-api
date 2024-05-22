@@ -144,10 +144,13 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         html_problems = markdown2.markdown(problems)
         
         # Prepare the answers list from the string
-        try:
-            answers_list = eval(answers)
-        except:
-            answers_list = answers.split('\n')
+        if answers:
+            try:
+                answers_list = eval(answers)
+            except:
+                answers_list = answers.split('\n')
+        else:
+            answers_list = []
         # Load template
         env = Environment(loader=FileSystemLoader('templates'))
         template = env.get_template('template.html')
