@@ -296,8 +296,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             stream=True)
         transcribed_submission.resolve()
         print(transcribed_submission.text)
-
-        assignment_problems = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first().description
+        assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+        assignment_problems = assignment.problems
+        assignment_answers = assignment.answers
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
         model="gpt-4o",
@@ -321,7 +322,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 },
                 {
                 "type": "text",
-                "text": f"Here is the assignment itself: {assignment_problems}",
+                "text": f"Here are the assignment problems: {assignment_problems}, and here are the assignment answers: {assignment_answers}",
                 },
                 # {
                 # "type": "image_url",
