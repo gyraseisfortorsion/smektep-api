@@ -56,13 +56,13 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
     
-@router.get("/{assignment_id}", response_model = AssignmentSubmissionRead, description="Get a submission details by id")
+@router.get("/{submission_id}", response_model = AssignmentSubmissionRead, description="Get a submission details by id")
 def get_submission(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
-    if auth_service.get_role(credentials.credentials)== "student":
+    if auth_service.get_role(credentials.credentials)== "student" or auth_service.get_role(credentials.credentials)== "teacher":
         return assignment_submission_service.get_by_id(db, assignment_id, user_id)
     else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view submissions")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only submission owner or the teacher can view the submission")
     
 @router.patch("/mark")
 def mark(body: AssignmentSubmissionMark, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
