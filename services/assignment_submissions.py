@@ -341,13 +341,21 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
     def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
-        if submission:
-            if submission.student_id == user_id:
-                return submission
-            else:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+        user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()
+        if user.role == "teacher":
+            teacher_classrooms = classroom_users_service.get_teacher_classrooms(db, user_id)
+            assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+            if assignment.classroom_id not in [classroom.id for classroom in teacher_classrooms]:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+            return submission
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found") 
+            if submission:
+                if submission.student_id == user_id:
+                    return submission
+                else:
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
 
     def download(self, submission_id: str, user_id: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
