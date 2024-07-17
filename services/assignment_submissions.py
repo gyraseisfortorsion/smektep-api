@@ -339,8 +339,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         print(response.choices[0].message.content)
         return response.choices[0].message.content
 
-    def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
-        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
+    def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
         user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()
         if user.role == "teacher":
             teacher_classrooms = classroom_users_service.get_teacher_classrooms(db, user_id)
@@ -356,6 +356,16 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+            
+    def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
+        if submission:
+            if submission.student_id == user_id:
+                return submission
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found") 
 
     def download(self, submission_id: str, user_id: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
