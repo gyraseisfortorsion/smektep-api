@@ -79,3 +79,14 @@ def mark(body: AssignmentSubmissionMark, credentials: HTTPAuthorizationCredentia
         return assignment_submission_service.mark(body, user_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can mark assignments")
+    
+@router.post("/ocr")
+async def ocr(file: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    #user_id = auth_service.get_current_user(credentials.credentials, db).id
+    role = auth_service.get_role(credentials.credentials)
+    if role == "student" or role == "teacher":
+        print("Pass role")
+        return await assignment_submission_service.ocr(file, db)
+    else:
+        print("Not pass role")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized access")

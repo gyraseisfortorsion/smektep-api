@@ -23,6 +23,10 @@ import os
 from models import ClassroomUser
 import openai
 import base64
+
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema.messages import HumanMessage, AIMessage
+
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
     def submit(self, body: AssignmentSubmissionCreate, user_id: str, db: Session):
@@ -339,6 +343,31 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         print(response.choices[0].message.content)
         return response.choices[0].message.content
 
+    async def ocr(self, file: UploadFile, db: Session):
+        content = await file.read()
+        image_base64 = base64.b64encode(content).decode('utf-8')
+        
+        chain = ChatOpenAI(openai_api_key=settings.OPENAI_API_KEY,
+                            model_name="gpt-4o",
+                            temperature=0.2)
+        msg = chain.invoke(
+            [
+                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Extract all texts from image. Don't leave anything out, return all extracted texts with no comments"},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}"
+                            },
+                        },
+                    ]
+                )
+            ]
+        )
+        return {"image_base64": image_base64, "text": msg.content}
+    
     def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
         user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()
