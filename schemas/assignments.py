@@ -98,7 +98,7 @@ class AssignmentsReadShort(Model):
 
 class AssignmentSubmissionRead(Model):
     model_config = ConfigDict(from_attributes=True)
-    
+    id: uuid.UUID
     student_id: uuid.UUID
     submission_date: datetime
     grade: Optional[float]
