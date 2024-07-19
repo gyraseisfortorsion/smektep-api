@@ -40,7 +40,7 @@ async def download(submission_id: str, credentials: HTTPAuthorizationCredentials
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     
-@router.get("/submissions/{assignment_id}", response_model = List[AssignmentSubmissionReadTeacher], description="Get all submissions for an assignment")
+@router.get("/submissions/by_assignment/{assignment_id}", response_model = List[AssignmentSubmissionReadTeacher], description="Get all submissions for an assignment")
 def get_submissions(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":
