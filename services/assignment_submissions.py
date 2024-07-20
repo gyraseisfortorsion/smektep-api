@@ -420,7 +420,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             
             glm.Content(
                 parts = [
-                    glm.Part(text="First count how many answers are there, based on this count list all of the answers of the student, just the answers, if student couldnt solve or omitted the problem indicate that. REPLY IN RUSSIAN."),
+                    glm.Part(text="Transcribe the student's submission."),
                     glm.Part(
                         inline_data=glm.Blob(
                             mime_type='image/jpeg',
