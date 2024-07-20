@@ -207,7 +207,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             os.makedirs('services/temp')
 
         genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel('gemini-pro-vision')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.pdf_url)
@@ -346,7 +346,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             os.makedirs('services/temp')
 
         genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel('gemini-pro-vision')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.pdf_url)
