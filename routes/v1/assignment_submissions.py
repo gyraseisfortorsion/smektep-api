@@ -55,6 +55,14 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
         return await assignment_submission_service.check_submission_gpt(submission_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
+
+@router.get("/transcribe/{submission_id}")
+async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    # user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials)== "teacher" or auth_service.get_role(credentials.credentials)== "student":
+        return await assignment_submission_service.transcribe(submission_id, db)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers and students can transcribe assignment submissions")
     
 @router.get("/submissions/{submission_id}", response_model = AssignmentSubmissionRead, description="Get a submission details by submission id")
 def get_submission(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
