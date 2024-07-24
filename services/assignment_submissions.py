@@ -368,6 +368,41 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         )
         return {"image_base64": image_base64, "text": msg.content}
     
+    async def solve_task(self, ocr_result: str):
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        assistant = client.beta.assistants.create(
+                            name="Math Tutor",
+                            instructions="You are a personal math tutor. Write and run code to answer math questions.",
+                            tools=[{"type": "code_interpreter"}],
+                            model="gpt-4o"
+                        )
+        thread = client.beta.threads.create()
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=f"""
+            Check the given math example with student's solution: {ocr_result} and provide feedback on it. 
+            Check carefully everything that needs to be checked. The expected output is specific, easy to follow, concise 
+            feedback on the math solution (what was correct, what wasn't, and why, use criteria if mentioned).
+            Use the Russian language in the feedback ALWAYS!. Make everything easy to read and follow. 
+            Do not return the same text as the student's work, only reference specific parts in the feedback if necessary. 
+            """
+        )
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant.id
+        )
+        if run.status == 'completed':
+            messages = client.beta.threads.messages.list(
+                thread_id=thread.id
+            )
+            agent_feedback = messages
+            if not messages:
+                agent_feedback = "No feedback received."
+        else:
+            agent_feedback = "Feedback generation in progress or failed."
+        return {"Feedback": agent_feedback}
+
     def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
         user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()

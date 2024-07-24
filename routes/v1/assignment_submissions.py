@@ -90,3 +90,18 @@ async def ocr(file: UploadFile = File(...), credentials: HTTPAuthorizationCreden
     else:
         print("Not pass role")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized access")
+
+@router.post("/feedback")
+async def get_feedback(file: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    #user_id = auth_service.get_current_user(credentials.credentials, db).id
+    role = auth_service.get_role(credentials.credentials)
+    if role == "student" or role == "teacher":
+        print("Y")
+        print("YY")
+        ocr_result = await assignment_submission_service.ocr(file, db)
+        print("YYY")
+        feedback = await assignment_submission_service.solve_task(ocr_result)
+        print("YYYY")
+        return feedback
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized access")
