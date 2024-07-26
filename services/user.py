@@ -6,7 +6,7 @@ from utils import hash_password
 from sqlalchemy.orm import Session 
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from services import object_storage_service
+from .object_storage import object_storage_service
 from schemas import (
     UserCreate,
     UserUpdate,
