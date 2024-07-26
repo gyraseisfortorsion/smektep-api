@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db
@@ -14,6 +14,32 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db
     print(user.__dict__)
     print(user.user_info.__dict__)
     return user
+
+@router.post("/avatar/upload", description="Upload user avatar")
+async def upload_avatar(pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user = auth_service.get_current_user(credentials.credentials, db)
+    # save image to local directory
+    with open(pdf.filename, "wb") as f:
+        f.write(pdf.file.read())
+
+    avatar = await user_service.upload_avatar(pdf.filename)
+    if not avatar:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload image")
+    return avatar
+
+@router.get("/avatar", description="Download user avatar")
+async def get_avatar(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user = auth_service.get_current_user(credentials.credentials, db)
+    avatar = await user_service.get_avatar(user.id)
+    if not avatar:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found")
+    return Response(
+        content=avatar,
+        headers={
+            'Content-Disposition': f'attachment;filename=avatar.png',
+            'Content-Type': 'image/png',
+        }
+    )
 
 @router.get("/teachers/me", response_model=UserTeacherRead)
 def get_teacher_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):

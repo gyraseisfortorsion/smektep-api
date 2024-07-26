@@ -6,6 +6,7 @@ from utils import hash_password
 from sqlalchemy.orm import Session 
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+from services import object_storage_service
 from schemas import (
     UserCreate,
     UserUpdate,
@@ -20,6 +21,7 @@ from schemas import (
     TeacherInfoCreateAttach
 )
 import uuid
+import os
 class UserService(ServiceBase[User, UserCreate, UserUpdate]):
 
     def create(self, db: Session, body: UserCreate):
@@ -88,6 +90,28 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
     
     def get_all_users(self, db: Session):
         return db.query(User).all()
+    
+    async def upload_avatar(self, db: Session, user: User, filename: str):
+        if os.path.exists(filename):
+            with open(filename, 'rb') as file:
+                avatar = file.read()
+                # get the file type
+                ext = filename.split('.')[-1]
+                s3_filename = "avatars/" + user.id + '.' + ext
+                await object_storage_service.s3_upload(avatar, s3_filename)
+                user.avatar = s3_filename
+                db.commit()
+                return user
+        else:
+            return None
+    
+    async def get_avatar(self, db: Session, user_id: str):
+        user = self.get_by_id(db, user_id)
+        if user.avatar:
+            return await object_storage_service.s3_download(user.avatar)
+        return None
+
+
     
 user_service = UserService(User)
         
