@@ -14,6 +14,7 @@ class User(isActiveModel):
     email = Column(String, nullable=False)
     last_signed_at = Column(DateTime)
     role = Column(Enum('teacher', 'secondary_teacher', 'curator', 'moderator', 'admin', 'assistant', 'student', name='role'))
+    avatar = Column(String)
     
     user_info = relationship('UserInfo', back_populates='user')
     teacher_info = relationship('TeacherInfo', back_populates='user', uselist=False)

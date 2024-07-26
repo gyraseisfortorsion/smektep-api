@@ -16,13 +16,13 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db
     return user
 
 @router.post("/avatar/upload", description="Upload user avatar")
-async def upload_avatar(pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+async def upload_avatar(avatar: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user = auth_service.get_current_user(credentials.credentials, db)
     # save image to local directory
     with open(pdf.filename, "wb") as f:
         f.write(pdf.file.read())
 
-    avatar = await user_service.upload_avatar(pdf.filename)
+    avatar = await user_service.upload_avatar(db, user, avatar.filename)
     if not avatar:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload image")
     return avatar
