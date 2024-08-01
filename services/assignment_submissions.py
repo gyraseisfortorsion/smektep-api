@@ -436,6 +436,55 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         transcribed_submission.resolve()
         return transcribed_submission.text
     
+    def save_transcription(self, submission_id: str, transcription: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        submission.transcription = transcription
+        db.commit()
+        db.refresh(submission)
+        return submission
+    
+    def get_transcription(self, submission_id: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        if submission:
+            return submission.transcription
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+    async def check_submission_from_transcription(self, submission_id: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+        assignment_problems = assignment.problems
+        assignment_answers = assignment.answers
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+        model="gpt-4o",
+                messages=[
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "First of all be sure to pay attention on student's answers and the correct answer list. Last image is the image with assignement and correct answers. Check the submitted work based on the provided answers, and provide detailed feedback and final mark. DONT FORGET TO PROVIDE FINAL MARK, IF ANY OF THE PROBLEMS OR QUESTIONS LEFT UNANSWERED IT MEANS NO POINT FOR THAT OR JUST INCORRECT ANSWER. REPLY IN RUSSIAN.",
+                },
+                {
+                "type": "text",
+                "text": f"Here is the transcribed solution of the student: {submission.transcription}",
+                },
+                {
+                "type": "text",
+                "text": f"Here are the assignment problems: {assignment_problems}, and here are the assignment answers: {assignment_answers}",
+                },
+                # {
+                # "type": "image_url",
+                # "image_url": {
+                #    "url": f"data:image/jpeg;base64,{assignment_image_base64}",
+                # },
+                # },
+            ],
+            }
+        ],
+        max_tokens=800,
+        )
+
     def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
         user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()

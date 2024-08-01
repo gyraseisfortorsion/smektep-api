@@ -18,6 +18,9 @@ class AssignmentSubmissionCreate(Model):
 class AssignmentSubmissionMark(ReadModel):
     grade: float
 
+class ApproveTranscription(Model):
+    submission_id: uuid.UUID
+    transcription: str
 class AssignmentSubmissionResubmit(ReadModel):
     submission_date: datetime
     parent_id: Optional[uuid.UUID]

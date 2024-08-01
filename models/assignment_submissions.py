@@ -16,6 +16,7 @@ class AssignmentSubmission(Model):
     grade = Column(Float(53))
     commentaries = Column(Text)
     pdf_url = Column(Text)
+    transcription = Column(Text)
 
     assignment = relationship('Assignment', back_populates='assignment_submissions')
     # parent = relationship('AssignmentSubmission', remote_side='AssignmentSubmission.id', back_populates='children')
