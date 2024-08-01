@@ -484,6 +484,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         ],
         max_tokens=800,
         )
+        return response.choices[0].message.content
 
     def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
