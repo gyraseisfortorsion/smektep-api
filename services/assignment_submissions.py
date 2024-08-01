@@ -150,7 +150,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
         images2 = convert_from_path(f'{assignment_pdf_path}')
         image_paths2 = []
-        for i in range(len(images)):
+        for i in range(len(images2)):
             # create temp directory for images
             if not os.path.exists('services/temp/images/assignment'):
                 os.makedirs('services/temp/images/assignment')
@@ -241,7 +241,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
         images2 = convert_from_path(f'{assignment_pdf_path}')
         image_paths2 = []
-        for i in range(len(images)):
+        for i in range(len(images2)):
             # create temp directory for images
             if not os.path.exists('services/temp/images/assignment'):
                 os.makedirs('services/temp/images/assignment')
@@ -380,7 +380,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
         images2 = convert_from_path(f'{assignment_pdf_path}')
         image_paths2 = []
-        for i in range(len(images)):
+        for i in range(len(images2)):
             # create temp directory for images
             if not os.path.exists('services/temp/images/assignment'):
                 os.makedirs('services/temp/images/assignment')
