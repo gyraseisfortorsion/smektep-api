@@ -30,7 +30,7 @@ async def upload_avatar(avatar: UploadFile = File(...), credentials: HTTPAuthori
 @router.get("/avatar", description="Download user avatar")
 async def get_avatar(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user = auth_service.get_current_user(credentials.credentials, db)
-    avatar = await user_service.get_avatar(user.id)
+    avatar = await user_service.get_avatar(db, user.id)
     if not avatar:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found")
     return Response(
