@@ -19,8 +19,8 @@ def get_me(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db
 async def upload_avatar(avatar: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user = auth_service.get_current_user(credentials.credentials, db)
     # save image to local directory
-    with open(pdf.filename, "wb") as f:
-        f.write(pdf.file.read())
+    with open(avatar.filename, "wb") as f:
+        f.write(avatar.file.read())
 
     avatar = await user_service.upload_avatar(db, user, avatar.filename)
     if not avatar:
