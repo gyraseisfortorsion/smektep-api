@@ -97,7 +97,7 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
                 avatar = file.read()
                 # get the file type
                 ext = filename.split('.')[-1]
-                s3_filename = "avatars/" + user.id + '.' + ext
+                s3_filename = "avatars/" + str(user.id) + '.' + ext
                 await object_storage_service.s3_upload(avatar, s3_filename)
                 user.avatar = s3_filename
                 db.commit()
