@@ -72,7 +72,7 @@ def check(body: ApproveTranscription, credentials: HTTPAuthorizationCredentials 
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can approve transcriptions")
     
-@router.get("/submissions/transcription/{submission_id}")
+@router.get("/submissions/transcription")
 def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":
