@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from .base import isActiveModel, Model
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, text, Text
 from sqlalchemy.dialects.postgresql import UUID
 from core import Base
 from datetime import datetime
@@ -12,6 +12,7 @@ class Classroom(Model):
     name = Column(String)
     subject_id = Column(ForeignKey('subjects.id'))
     school_id = Column(String())
+    background_image = Column(Text)
 
     subject = relationship('Subject', back_populates='classrooms')
     users = relationship('ClassroomUser', back_populates='classroom')

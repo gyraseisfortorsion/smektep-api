@@ -57,7 +57,7 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can check assignments")
 
 @router.get("/transcribe/{submission_id}")
-async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+async def transcribe(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher" or auth_service.get_role(credentials.credentials)== "student":
         return await assignment_submission_service.transcribe(submission_id, db)
@@ -65,7 +65,7 @@ async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers and students can transcribe assignment submissions")
 
 @router.post("/transcribe/approve")
-def check(body: ApproveTranscription, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+def approve_transcription(body: ApproveTranscription, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "student":
         return assignment_submission_service.save_transcription(body.submission_id, body.transcription, db)
@@ -73,7 +73,7 @@ def check(body: ApproveTranscription, credentials: HTTPAuthorizationCredentials 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can approve transcriptions")
     
 @router.get("/submissions/transcription/{submission_id}")
-def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+def get_transcription(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher" or auth_service.get_role(credentials.credentials)== "student":
         return assignment_submission_service.get_transcription(submission_id, db)
@@ -81,7 +81,7 @@ def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depend
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers and students can view transcriptions")
 
 @router.get("/check/transcription/{submission_id}")
-async def check(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+async def check_transcription(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":
         return await assignment_submission_service.check_submission_from_transcription(submission_id, db)

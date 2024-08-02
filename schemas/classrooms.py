@@ -27,6 +27,7 @@ class ClassroomRead(Model):
     name: str
     subject: SubjectRead
     school_id: uuid.UUID
+    background_image: Optional[str]
 
 class ClassroomStudentRead(Model):
     model_config = ConfigDict(from_attributes=True)
