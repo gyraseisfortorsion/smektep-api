@@ -5,4 +5,5 @@ from .classrooms import Classroom
 from .subjects import Subject
 from .assignments import Assignment
 from .assignment_submissions import AssignmentSubmission
+from .posts import Post
 

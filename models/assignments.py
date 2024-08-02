@@ -26,3 +26,4 @@ class Assignment(Model):
 
     classroom = relationship('Classroom', back_populates='assignments')
     assignment_submissions = relationship('AssignmentSubmission', back_populates='assignment', cascade='all, delete')
+    posts = relationship('Post', back_populates='assignment', cascade='all, delete')

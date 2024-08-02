@@ -16,3 +16,4 @@ class Classroom(Model):
     subject = relationship('Subject', back_populates='classrooms')
     users = relationship('ClassroomUser', back_populates='classroom')
     assignments = relationship('Assignment', back_populates='classroom')
+    posts = relationship('Post', back_populates='classroom')
