@@ -6,6 +6,8 @@ from .classrooms import router as classrooms_router
 from .subjects import router as subjects_router
 from .classroom_users import router as classroom_users_router
 from .assignment_submissions import router as assignment_submissions_router
+from .posts import router as post_router
+
 router = APIRouter(prefix="/v1")
 
 router.include_router(auth_router)
@@ -15,3 +17,4 @@ router.include_router(classrooms_router)
 router.include_router(subjects_router)
 router.include_router(classroom_users_router)
 router.include_router(assignment_submissions_router)
+router.include_router(post_router)
