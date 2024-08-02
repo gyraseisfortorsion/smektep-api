@@ -34,3 +34,8 @@ def get_post(classroom_id: str, post_id: str, credentials: HTTPAuthorizationCred
 def update_post(post_id: str, body: PostUpdate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     return post_service.update_post(db, post_id, user_id, body)
+
+@router.delete("/{post_id}")
+def delete_post(post_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    return post_service.delete(db, post_id, user_id)

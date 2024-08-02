@@ -29,6 +29,20 @@ class PostService(ServiceBase[Post, PostCreate, PostUpdate]):
         if post.author_id != user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not the author of this post")
         return super().update(db, db_obj=post, obj_in=body)
-
+    
+    def delete(self, db: Session, post_id: str, user_id: str):
+        post = self.get_by_id(db, post_id)
+        if not post:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        if post.author_id != user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not the author of this post")
+        try:
+            db.delete(post)
+            db.flush()
+        except Exception as e:
+            db.rollback()
+            raise e
+        return post
+        
     
 post_service = PostService(Post)
