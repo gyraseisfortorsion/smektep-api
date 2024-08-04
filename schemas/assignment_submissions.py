@@ -5,7 +5,7 @@ from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from .user import StudentNameRead
 from enum import Enum
-from assignments import AssignmentsReadShort
+from .assignments import AssignmentsReadShort
 
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
 
