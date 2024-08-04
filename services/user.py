@@ -111,7 +111,8 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
             return await object_storage_service.s3_download(user.avatar)
         return None
 
-
+    async def get_avatar_by_link(self, link: str):
+        return await object_storage_service.s3_download(link)
     
 user_service = UserService(User)
         
