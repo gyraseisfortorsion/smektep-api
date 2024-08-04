@@ -494,6 +494,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
             if assignment.classroom_id not in [classroom.id for classroom in teacher_classrooms]:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+            submission.student_info = submission.student.user_info
             return submission
         else:
             if submission:
@@ -508,6 +509,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
         if submission:
             if submission.student_id == user_id:
+                submission.student_info = submission.student.user_info
                 return submission
             else:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")

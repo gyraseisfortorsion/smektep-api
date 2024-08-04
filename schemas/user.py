@@ -139,3 +139,7 @@ class StudentNameRead(Model):
     first_name: str
     last_name: str
     father_name: Optional[str]
+
+class UserStudentNameRead(UserRead):
+    model_config = ConfigDict(from_attributes=True)
+    user_info: StudentNameRead
