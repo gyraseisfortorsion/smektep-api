@@ -26,7 +26,7 @@ class UserInfoFullName(Model):
 class UserPostInfo(Model):
     model_config = ConfigDict(from_attributes=True)
     avatar: Optional[str]
-    full_name: UserInfoFullName
+    user_info: UserInfoFullName
     
 class UserInfoCreate(Model):
     first_name: str
