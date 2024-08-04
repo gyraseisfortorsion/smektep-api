@@ -41,7 +41,7 @@ async def get_avatar(credentials: HTTPAuthorizationCredentials = Depends(HTTPBea
         }
     )
 
-@router.get("/avatar", description="Download user avatar")
+@router.get("/avatar/link", description="Download user avatar")
 async def get_avatar_by_link(link: UserAvatar, db: Session = Depends(get_db)):
     avatar = await user_service.get_avatar_by_link(link)
     if not avatar:
