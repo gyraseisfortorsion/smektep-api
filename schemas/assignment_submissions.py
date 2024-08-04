@@ -5,7 +5,6 @@ from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from .user import StudentNameRead
 from enum import Enum
-from .assignments import AssignmentsReadShort
 
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
 
@@ -52,16 +51,3 @@ class AssignmentSubmissionReadTeacher(Model):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
-class AssignmentSubmissionRead(Model):
-    model_config = ConfigDict(from_attributes=True)
-    id: uuid.UUID
-    student_id: uuid.UUID
-    student: StudentNameRead
-    submission_date: datetime
-    grade: Optional[float]
-    commentaries: Optional[str]
-    pdf_url: Optional[str]
-    student_info: StudentNameRead
-    assignment: AssignmentsReadShort
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]

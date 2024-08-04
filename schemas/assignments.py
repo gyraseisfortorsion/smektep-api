@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from typing import List, Optional
 from dateutil.relativedelta import relativedelta
-from .assignment_submissions import AssignmentSubmissionReadShort
+from .assignment_submissions import AssignmentSubmissionReadShort, StudentNameRead
 from enum import Enum
 
 from pydantic import EmailStr, Field, root_validator, validator, ConfigDict, StringConstraints
@@ -104,8 +104,7 @@ class AssignmentSubmissionRead(Model):
     grade: Optional[float]
     commentaries: Optional[str]
     pdf_url: Optional[str]
+    student_info: StudentNameRead
     assignment: AssignmentsReadShort
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
-
-
