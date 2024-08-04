@@ -39,7 +39,7 @@ class ClassroomStudentRead(Model):
 
 class ClassroomGradesRead(Model):
     model_config = ConfigDict(from_attributes=True)
-    grade: float
+    grade: Optional[float]
     student_info: UserInfoFullName
     student_id: uuid.UUID
     max_grade: float
