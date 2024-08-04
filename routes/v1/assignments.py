@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate
+from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate
 from services import assignment_service, auth_service
 
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
-
 
 @router.post("/word-problems/generate")
 async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
