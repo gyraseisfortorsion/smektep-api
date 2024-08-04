@@ -18,7 +18,8 @@ from schemas import (
     StudentInfoRead,
     TeacherInfoCreate,
     TeacherInfoRead,
-    TeacherInfoCreateAttach
+    TeacherInfoCreateAttach,
+    UserAvatar
 )
 import uuid
 import os
@@ -111,7 +112,7 @@ class UserService(ServiceBase[User, UserCreate, UserUpdate]):
             return await object_storage_service.s3_download(user.avatar)
         return None
 
-    async def get_avatar_by_link(self, link: str):
+    async def get_avatar_by_link(self, link: UserAvatar):
         return await object_storage_service.s3_download(link)
     
 user_service = UserService(User)

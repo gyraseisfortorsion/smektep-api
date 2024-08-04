@@ -36,6 +36,9 @@ class UserInfoCreate(Model):
     gender: bool
     phone_number: Optional[str]
 
+class UserAvatar(Model):
+    avatar: str
+
 class UserRead(ReadModel):
     model_config = ConfigDict(from_attributes=True)
 

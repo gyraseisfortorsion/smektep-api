@@ -41,8 +41,8 @@ async def get_avatar(credentials: HTTPAuthorizationCredentials = Depends(HTTPBea
         }
     )
 
-@router.get("/avatar/{link}", description="Download user avatar")
-async def get_avatar_by_link(link: str, db: Session = Depends(get_db)):
+@router.get("/avatar", description="Download user avatar")
+async def get_avatar_by_link(link: UserAvatar, db: Session = Depends(get_db)):
     avatar = await user_service.get_avatar_by_link(link)
     if not avatar:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found")
