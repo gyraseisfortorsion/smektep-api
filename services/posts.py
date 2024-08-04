@@ -46,11 +46,9 @@ class PostService(ServiceBase[Post, PostCreate, PostUpdate]):
         return post
     
     def create(self, db: Session, obj_in: PostCreate, author_id: str):
-        if model is None:
-            model = self.model
         obj_in_data = jsonable_encoder(obj_in)
         obj_in_data['author_id'] = author_id
-        db_obj = model(**obj_in_data)  # type: ignore
+        db_obj = Post(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.flush()
         
