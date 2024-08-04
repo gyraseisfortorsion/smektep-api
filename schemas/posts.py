@@ -30,7 +30,7 @@ class PostRead(Model):
     title: str
     content: Optional[str]
     attachment_link: Optional[str]
-    author_info: UserPostInfo
+    author: UserPostInfo
     created_at: datetime
     updated_at: Optional[datetime]
 
