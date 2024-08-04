@@ -2,6 +2,7 @@ from .base import Model
 from datetime import datetime
 import uuid
 from typing import Optional
+from .user import UserPostInfo
 
 from pydantic import ConfigDict
 
@@ -29,6 +30,7 @@ class PostRead(Model):
     title: str
     content: Optional[str]
     attachment_link: Optional[str]
+    author_info: UserPostInfo
     created_at: datetime
     updated_at: Optional[datetime]
 
