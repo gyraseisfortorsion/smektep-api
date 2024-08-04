@@ -39,8 +39,11 @@ class ClassroomStudentRead(Model):
 
 class ClassroomGradesRead(Model):
     model_config = ConfigDict(from_attributes=True)
+    assignment_id: uuid.UUID
+    assignment_name: str
+    date_to: Optional[datetime]
     grade: Optional[float]
-    student_info: UserInfoFullName
-    student_id: uuid.UUID
     max_grade: float
+    student_id: uuid.UUID
+    student_info: UserInfoFullName
 

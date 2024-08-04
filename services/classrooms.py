@@ -57,6 +57,9 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                 student = submission.student
                 student_info = student.user_info  # Assuming the Student model has a full_name attribute
                 grade_info = {
+                    "assignment_id": assignment.id,
+                    "assignment_name": assignment.name,
+                    "date_to": assignment.date_to,
                     "grade": submission.grade,
                     "student_info": student_info,
                     "student_id": submission.student_id,
