@@ -14,9 +14,8 @@ def create_post(body: PostCreate, credentials: HTTPAuthorizationCredentials = De
     # get user id from token
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     # add author_id to body
-    body.author_id = user_id
     if auth_service.get_role(credentials.credentials)== "teacher" or auth_service.get_role(credentials.credentials)== "curator":
-        return post_service.create(db, body)
+        return post_service.create(db, body, user_id)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers and curators can create posts")
     
