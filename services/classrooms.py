@@ -52,7 +52,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
         grades = []
         for assignment in classroom.assignments:
-            for submission in assignment.submissions:
+            for submission in assignment.assignment_submissions:
                 # Assuming there's a Student model with a method to get the full name by student_id
                 student = submission.student
                 student_info = student.user_info  # Assuming the Student model has a full_name attribute
