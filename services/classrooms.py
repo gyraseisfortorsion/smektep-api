@@ -68,6 +68,8 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                 grades.append(grade_info)
         grades = sorted(grades, key=lambda x: x['date_to'])
         return grades
+    
+    # def generate_code(self, db: Session, classroom_id):
 
         
 classroom_service = ClassroomService(Classroom)

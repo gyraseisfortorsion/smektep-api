@@ -329,6 +329,8 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         db.delete(assignment)
         db.commit()
         return "success"
+    
+
 
 
 assignment_service = AssignmentService(Assignment)
