@@ -32,3 +32,4 @@ class PostRead(Model):
     created_at: datetime
     updated_at: Optional[datetime]
 
+

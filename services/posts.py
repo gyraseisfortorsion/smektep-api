@@ -3,6 +3,7 @@ from core import settings
 from .base import ServiceBase
 from models import Post, ClassroomUser
 from schemas import PostCreate, PostUpdate, PostRead
+from fastapi.encoders import jsonable_encoder
 
 from sqlalchemy.orm import Session
 
@@ -43,6 +44,17 @@ class PostService(ServiceBase[Post, PostCreate, PostUpdate]):
             db.rollback()
             raise e
         return post
+    
+    def create(self, db: Session, obj_in: PostCreate, author_id: str):
+        if model is None:
+            model = self.model
+        obj_in_data = jsonable_encoder(obj_in)
+        obj_in_data['author_id'] = author_id
+        db_obj = model(**obj_in_data)  # type: ignore
+        db.add(db_obj)
+        db.flush()
+        
+        return db_obj
         
     
 post_service = PostService(Post)
