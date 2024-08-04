@@ -66,6 +66,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                     "max_grade": assignment.max_grade
                 }
                 grades.append(grade_info)
+        grades = sorted(grades, key=lambda x: x['date_to'])
         return grades
 
         
