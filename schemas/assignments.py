@@ -58,6 +58,23 @@ class HomeworkCreate(Model):
     quantity: int = 5
     extra_info: Optional[str] = None
 
+#MCQ
+class MultipleChoiceCreate(Model):
+    subject: str
+    topic: str
+    grade_level: str
+    difficulty: str
+    num_questions: int
+    num_choices: int
+    extra_info: Optional[str] = None
+#wordproblems
+class WordProblemCreate(Model):
+    subject_aim: str
+    topic: str
+    num_questions: int
+    thematic: Optional[str] = None
+
+
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
     answers: Optional[str] = None

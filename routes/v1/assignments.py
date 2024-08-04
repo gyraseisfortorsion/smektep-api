@@ -7,6 +7,44 @@ from services import assignment_service, auth_service
 
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
+
+@router.post("/word-problems/generate")
+async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials) == "teacher":
+        word_problems = await assignment_service.generate_word_problems(
+            subject_aim=body.subject_aim,
+            topic=body.topic,
+            num_questions=body.num_questions,
+            thematic=body.thematic
+        )
+        if not word_problems:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate word problems")
+        return word_problems
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can generate word problems")
+
+
+@router.post("/multiple-choice/generate")
+async def generate_multiple_choice_questions(body: MultipleChoiceCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials) == "teacher":
+        mcq = await assignment_service.generate_multiple_choice_questions(
+            subject=body.subject,
+            topic=body.topic,
+            grade_level=body.grade_level,
+            difficulty=body.difficulty,
+            num_questions=body.num_questions,
+            num_choices=body.num_choices,
+            extra_info=body.extra_info
+        )
+        if not mcq:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate multiple choice questions")
+        return mcq
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can generate multiple choice questions")
+
+
 @router.post("/homework/generate/{password}")
 async def generate_homework(password: str, body: HomeworkCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id

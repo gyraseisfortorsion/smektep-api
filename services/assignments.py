@@ -17,7 +17,63 @@ from jinja2 import Environment, FileSystemLoader
 
 
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
+    async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+        # Prepare the system message
+        system_message = {
+            "role": "system",
+            "content": f"You are an AI tutor specializing in {subject_aim}. Always reply in Russian, even if the question is in English."
+        }
+
+        # Prepare the user message
+        user_message = {
+            "role": "user",
+            "content": f"Generate {num_questions} word problems for the topic '{topic}'. Each problem should follow the thematic: '{thematic}'." if thematic else f"Generate {num_questions} word problems for the topic '{topic}'. Provide the correct answer as well. Don't write any extra comment."
+        }
+
+        # Call the OpenAI API to generate word problems
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[system_message, user_message]
+        )
+
+        if not response.choices:
+            raise HTTPException(status_code=500, detail="Failed to generate word problems")
+
+        word_problems_content = response.choices[0].message.content
+
+        return {"word_problems": word_problems_content}
+    
+    async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+        # Prepare the system message
+        system_message = {
+            "role": "system",
+            "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in Russian, even if the question is in English."
+        }
+
+        # Prepare the user message
+        user_message = {
+            "role": "user",
+            "content": f"Generate {num_questions} multiple choice questions for the topic '{topic}' with {num_choices} choices each. Provide the correct answer as well. Don't write any extra comment.{f'Additional instructions: {extra_info}' if extra_info else ''}"
+        }
+
+        # Call the OpenAI API to generate questions
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[system_message, user_message]
+        )
+
+        if not response.choices:
+            raise HTTPException(status_code=500, detail="Failed to generate questions")
+
+        questions_content = response.choices[0].message.content
+
+        return {"questions": questions_content}
+    
+    
     async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
