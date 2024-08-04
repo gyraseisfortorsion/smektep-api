@@ -36,3 +36,11 @@ class ClassroomStudentRead(Model):
     teacher: UserInfoFullName
     subject: SubjectRead
     school_id: uuid.UUID
+
+class ClassroomGradesRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+    grade: float
+    student_info: UserInfoFullName
+    student_id: uuid.UUID
+    max_grade: float
+

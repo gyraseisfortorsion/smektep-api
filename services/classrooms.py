@@ -42,4 +42,28 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
         
+    def get_classroom_grades(self, db: Session, classroom_id: str, user_id: str):
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == classroom_id, ClassroomUser.user_id == user_id).first()
+        if not classroom_user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not in this classroom")
+        if classroom_user.role not in ["teacher", "secondary_teacher", "curator"]:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view grades")
+        
+        classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
+        grades = []
+        for assignment in classroom.assignments:
+            for submission in assignment.submissions:
+                # Assuming there's a Student model with a method to get the full name by student_id
+                student = submission.student
+                student_info = student.user_info  # Assuming the Student model has a full_name attribute
+                grade_info = {
+                    "grade": submission.grade,
+                    "student_info": student_info,
+                    "student_id": submission.student_id,
+                    "max_grade": assignment.max_grade
+                }
+                grades.append(grade_info)
+        return grades
+
+        
 classroom_service = ClassroomService(Classroom)

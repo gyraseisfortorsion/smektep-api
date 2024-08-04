@@ -14,9 +14,81 @@ from sqlalchemy.orm import Session
 import markdown2
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
+from abc import ABC, abstractmethod
+
+class TaskGenerator(ABC):
+    def __init__(self, api_key: str):
+        self.client = OpenAI(api_key=api_key)
+
+    @abstractmethod
+    async def generate(self, **kwargs):
+        pass
+
+    async def call_openai_api(self, system_message: dict, user_message: dict):
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[system_message, user_message]
+        )
+
+        if not response.choices:
+            raise HTTPException(status_code=500, detail="Failed to generate tasks")
+
+        return response.choices[0].message.content
+
+class WordProblemGenerator(TaskGenerator):
+    async def generate(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
+        system_message = {
+            "role": "system",
+            "content": f"You are an AI tutor specializing in {subject_aim}. Always reply in Russian, even if the question is in English."
+        }
+
+        user_message = {
+            "role": "user",
+            "content": f"""
+                    Generate {num_questions} word problems for the topic '{topic}'.
+                    Each problem should follow the thematic if it was given: '{thematic}'.
+                    Provide the correct answersw as well.
+                    Don't write any extra comment.
+
+                    Follow this format of response!!! It is critical that you follow this format:
+                    ### Question 1:
+                    text of question
+                    ||| Answer 1:
+                    ### Question 2:
+                    text of question
+                    ||| Answer 2:
+                    and so on.
+                    """
+                }
+
+        return await self.call_openai_api(system_message, user_message)
 
 
+class MultipleChoiceQuestionGenerator(TaskGenerator):
+    async def generate(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
+        system_message = {
+            "role": "system",
+            "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in Russian, even if the question is in English."
+        }
+
+        user_message = {
+            "role": "user",
+            "content": f"Generate {num_questions} multiple choice questions for the topic '{topic}' with {num_choices} choices each. At the end ALWAYS Provide the correct answer as well. Don't write any extra comment.{f'Additional instructions: {extra_info}' if extra_info else ''}"
+        }
+
+        return await self.call_openai_api(system_message, user_message)
+    
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)
+        self.mcq_generator = MultipleChoiceQuestionGenerator(api_key=settings.OPENAI_API_KEY)
+    
+    async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
+        return {"word_problems": await self.word_problem_generator.generate(subject_aim, topic, num_questions, thematic)}
+
+    async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
+        return {"questions": await self.mcq_generator.generate(subject, topic, grade_level, difficulty, num_questions, num_choices, extra_info)}
 
     async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
 
