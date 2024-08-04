@@ -15,6 +15,7 @@ class PostService(ServiceBase[Post, PostCreate, PostUpdate]):
         if not classroom_user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not in this classroom")
         posts = db.query(Post).filter(Post.classroom_id == classroom_id).all()
+        schema_posts = [PostRead.from_orm(post) for post in posts]
         return posts
     
     def get_post(self, db: Session, classroom_id: str, post_id: str, user_id: str):
