@@ -507,9 +507,6 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         ],
         max_tokens=800,
         )
-        submission.transcription = response.choices[0].message.content
-        db.commit()
-        db.refresh(submission)
         return response.choices[0].message.content
     def save_transcription(self, submission_id: str, transcription: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
