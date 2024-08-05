@@ -435,9 +435,81 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             # generation_config=genai.types.GenerationConfig(
             # max_output_tokens=0),
             stream=True)
-        transcribed_submission.resolve()
+        try: 
+            transcribed_submission.resolve()
+        except:
+            transcribed_submission = await self.transcribe_gpt(submission_id, db)
         return transcribed_submission.text
     
+    
+    async def transcribe_gpt(self, submission_id: str, db: Session):
+        if not os.path.exists('services/temp'):
+            os.makedirs('services/temp')
+
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        # get pds submission from s3
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        print(submission.pdf_url)
+        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        # save pdf locally
+        pdf_filename = submission.pdf_url.replace('/', '_')
+        with open(f"services/temp/{pdf_filename}", "wb") as f:
+            f.write(pdf)
+        
+            
+        print(f"services/temp/{pdf_filename}")
+        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        images = convert_from_path(f'services/temp/{pdf_filename}')
+        image_paths = []
+        for i in range(len(images)):
+            if not os.path.exists('services/temp/images/submission'):
+                os.makedirs('services/temp/images/submission')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+            image_paths.append(image_path)
+            images[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_submission.jpg' )
+        
+
+        # cleanup temp directories after jpgs are generated
+        shutil.rmtree('services/temp')
+        # Initialize OpenAI API
+        openai.api_key = settings.OPENAI_API_KEY
+
+        with open('vertical_submission.jpg', 'rb') as f:
+            submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+        model="gpt-4o",
+                messages=[
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "Transcribe the student's submission.",
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                   "url": f"data:image/jpeg;base64,{submission_image_base64}",
+                },
+                },
+            ],
+            }
+        ],
+        max_tokens=800,
+        )
+        submission.transcription = response.choices[0].message.content
+        db.commit()
+        db.refresh(submission)
+        return response.choices[0].message.content
     def save_transcription(self, submission_id: str, transcription: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         submission.transcription = transcription
