@@ -335,7 +335,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         ],
         max_tokens=800,
         )
-
+        submission.ai_commentary = response.choices[0].message.content
+        db.commit()
+        db.refresh(submission)
         print(response.choices[0].message.content)
         return response.choices[0].message.content
     
