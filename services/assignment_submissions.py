@@ -439,7 +439,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             transcribed_submission.resolve()
         except:
             transcribed_submission = await self.transcribe_gpt(submission_id, db)
-        return transcribed_submission.text
+        return transcribed_submission
     
     
     async def transcribe_gpt(self, submission_id: str, db: Session):
