@@ -443,6 +443,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
     
     
     async def transcribe_gpt(self, submission_id: str, db: Session):
+        print("here in transcribe gpt")
         if not os.path.exists('services/temp'):
             os.makedirs('services/temp')
 
