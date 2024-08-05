@@ -484,6 +484,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         ],
         max_tokens=800,
         )
+        # set the ai_commentary of the submission to response
+        submission.ai_commentary = response.choices[0].message.content
+        db.commit()
+        db.refresh(submission)
         return response.choices[0].message.content
 
     def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:

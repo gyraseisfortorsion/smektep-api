@@ -47,6 +47,7 @@ class AssignmentSubmissionReadTeacher(Model):
     grade: Optional[float]
     commentaries: Optional[str]
     pdf_url: Optional[str]
+    ai_commentary: Optional[str]
     student_info: StudentNameRead
     created_at: Optional[datetime]
     updated_at: Optional[datetime]

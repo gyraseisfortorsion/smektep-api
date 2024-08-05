@@ -75,7 +75,7 @@ class WordProblemCreate(Model):
     topic: str
     num_questions: int
     thematic: Optional[str] = None
-    
+
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
     answers: Optional[str] = None
@@ -121,6 +121,7 @@ class AssignmentSubmissionRead(Model):
     submission_date: datetime
     grade: Optional[float]
     commentaries: Optional[str]
+    ai_commentary: Optional[str]
     pdf_url: Optional[str]
     student_info: StudentNameRead
     assignment: AssignmentsReadShort

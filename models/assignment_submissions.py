@@ -17,6 +17,7 @@ class AssignmentSubmission(Model):
     commentaries = Column(Text)
     pdf_url = Column(Text)
     transcription = Column(Text)
+    ai_commentary = Column(Text)
 
     assignment = relationship('Assignment', back_populates='assignment_submissions')
     # parent = relationship('AssignmentSubmission', remote_side='AssignmentSubmission.id', back_populates='children')
