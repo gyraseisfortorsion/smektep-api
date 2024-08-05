@@ -437,6 +437,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             stream=True)
         try: 
             transcribed_submission.resolve()
+            transcribed_submission = transcribed_submission.text
         except:
             transcribed_submission = await self.transcribe_gpt(submission_id, db)
         return transcribed_submission
