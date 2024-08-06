@@ -11,6 +11,8 @@ router = APIRouter(prefix="/assignments", tags=["Assignments Submissions"])
 @router.post("/upload")
 async def upload(assignment_id: str, pdf: UploadFile=File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     pdf = await pdf.read()
+    # get the filename of the pdf
+    filename = pdf.filename
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "student":
         return await assignment_submission_service.upload(pdf, assignment_id, user_id, db)

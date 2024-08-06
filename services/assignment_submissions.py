@@ -107,8 +107,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 submission.student_info = submission.student.user_info
             return submissions
     
-    async def upload(self, pdf: bytes, assignment_id: str, user_id: str, db: Session):
-        filename_in_s3 = f"{assignment_id}/{user_id}.pdf"
+    async def upload(self, pdf: bytes, assignment_id: str, user_id: str, file_ext:str, db: Session):
+        filename_in_s3 = f"{assignment_id}/{user_id}.{file_ext}"
+        if file_ext not in ['pdf', 'jpg', 'jpeg', 'png']:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File extension not supported")
         await object_storage_service.s3_upload(pdf, filename_in_s3)
         return filename_in_s3
     
@@ -358,55 +360,35 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
         
-            
+        filename = pdf_filename
         print(f"services/temp/{pdf_filename}")
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path(f'services/temp/{pdf_filename}')
-        image_paths = []
-        for i in range(len(images)):
-            if not os.path.exists('services/temp/images/submission'):
-                os.makedirs('services/temp/images/submission')
-            # Save pages as images in the pdf
-            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
-            image_paths.append(image_path)
-            images[i].save(image_path, 'JPEG')
-        imgs    = [Image.open(i) for i in image_paths]
-        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
-        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
-        imgs_comb = Image.fromarray( imgs_comb)
-        imgs_comb.save( 'vertical_submission.jpg' )
-        
-
-        # now do same but for the assignment pdf itself
-        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
-        images2 = convert_from_path(f'{assignment_pdf_path}')
-        image_paths2 = []
-        for i in range(len(images2)):
-            # create temp directory for images
-            if not os.path.exists('services/temp/images/assignment'):
-                os.makedirs('services/temp/images/assignment')
-            # Save pages as images in the pdf
-            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
-            image_paths2.append(image_path)
-            images2[i].save(image_path, 'JPEG')
-        imgs    = [Image.open(i) for i in image_paths]
-        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
-        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
-        imgs_comb = Image.fromarray( imgs_comb)
-        imgs_comb.save( 'vertical_assignment.jpg' )
+        if pdf_filename.endswith('.pdf'):
+            
+            # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+            images = convert_from_path(f'services/temp/{pdf_filename}')
+            image_paths = []
+            for i in range(len(images)):
+                if not os.path.exists('services/temp/images/submission'):
+                    os.makedirs('services/temp/images/submission')
+                # Save pages as images in the pdf
+                image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+                image_paths.append(image_path)
+                images[i].save(image_path, 'JPEG')
+            imgs    = [Image.open(i) for i in image_paths]
+            # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+            min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+            imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+            imgs_comb = Image.fromarray( imgs_comb)
+            imgs_comb.save( 'vertical_submission.jpg' )
+            filename = 'vertical_submission.jpg'
 
         # cleanup temp directories after jpgs are generated
         shutil.rmtree('services/temp')
         # Initialize OpenAI API
         openai.api_key = settings.OPENAI_API_KEY
 
-        # # Convert images to base64
-        with open('vertical_assignment.jpg', 'rb') as f:
-            assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
-        with open('vertical_submission.jpg', 'rb') as f:
-            submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+
 
         # Generate prompt
         # prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
@@ -426,7 +408,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                     glm.Part(
                         inline_data=glm.Blob(
                             mime_type='image/jpeg',
-                            data=pathlib.Path('vertical_submission.jpg').read_bytes()
+                            data=pathlib.Path(filename).read_bytes()
                         )
                     ),
                     
@@ -458,33 +440,34 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         pdf_filename = submission.pdf_url.replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
-        
+        filename=pdf_filename
+        if pdf_filename.endswith('.pdf'):
             
-        print(f"services/temp/{pdf_filename}")
-        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path(f'services/temp/{pdf_filename}')
-        image_paths = []
-        for i in range(len(images)):
-            if not os.path.exists('services/temp/images/submission'):
-                os.makedirs('services/temp/images/submission')
-            # Save pages as images in the pdf
-            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
-            image_paths.append(image_path)
-            images[i].save(image_path, 'JPEG')
-        imgs    = [Image.open(i) for i in image_paths]
-        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
-        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
-        imgs_comb = Image.fromarray( imgs_comb)
-        imgs_comb.save( 'vertical_submission.jpg' )
-        
-
+            print(f"services/temp/{pdf_filename}")
+            # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+            images = convert_from_path(f'services/temp/{pdf_filename}')
+            image_paths = []
+            for i in range(len(images)):
+                if not os.path.exists('services/temp/images/submission'):
+                    os.makedirs('services/temp/images/submission')
+                # Save pages as images in the pdf
+                image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+                image_paths.append(image_path)
+                images[i].save(image_path, 'JPEG')
+            imgs    = [Image.open(i) for i in image_paths]
+            # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+            min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+            imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+            imgs_comb = Image.fromarray( imgs_comb)
+            imgs_comb.save( 'vertical_submission.jpg' )
+            
+            filename = 'vertical_submission.jpg'
         # cleanup temp directories after jpgs are generated
         shutil.rmtree('services/temp')
         # Initialize OpenAI API
         openai.api_key = settings.OPENAI_API_KEY
 
-        with open('vertical_submission.jpg', 'rb') as f:
+        with open(filename, 'rb') as f:
             submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
