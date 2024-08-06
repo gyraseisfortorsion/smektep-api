@@ -360,7 +360,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
         
-        filename = pdf_filename
+        filename = f"services/temp/{pdf_filename}"
         print(f"services/temp/{pdf_filename}")
         # images = convert_from_path(f"services/temp/{submission.pdf_url}")
         if pdf_filename.endswith('.pdf'):
@@ -440,7 +440,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         pdf_filename = submission.pdf_url.replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
-        filename=pdf_filename
+        filename = f"services/temp/{pdf_filename}"
         if pdf_filename.endswith('.pdf'):
             
             print(f"services/temp/{pdf_filename}")
