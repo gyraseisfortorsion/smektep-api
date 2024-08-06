@@ -384,7 +384,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             filename = 'vertical_submission.jpg'
 
         # cleanup temp directories after jpgs are generated
-        shutil.rmtree('services/temp')
+        
         # Initialize OpenAI API
         openai.api_key = settings.OPENAI_API_KEY
 
@@ -417,6 +417,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             # generation_config=genai.types.GenerationConfig(
             # max_output_tokens=0),
             stream=True)
+        shutil.rmtree('services/temp')
         try: 
             transcribed_submission.resolve()
             transcribed_submission = transcribed_submission.text
@@ -491,6 +492,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         ],
         max_tokens=800,
         )
+        shutil.rmtree('services/temp')
         return response.choices[0].message.content
     def save_transcription(self, submission_id: str, transcription: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
