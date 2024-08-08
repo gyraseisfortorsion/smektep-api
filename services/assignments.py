@@ -1,335 +1,476 @@
-from openai import OpenAI
 from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile, File
 from core import settings
 from .base import ServiceBase
-from models import Assignment, ClassroomUser
-from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort
+from models import ClassroomUser, Classroom, Assignment, AssignmentSubmission
+from schemas import AssignmentSubmissionCreate, AssignmentSubmissionResubmit, AssignmentSubmissionMark
 from datetime import datetime
-from .object_storage import object_storage_service
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 import uuid
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-import markdown2
-import pdfkit
-from jinja2 import Environment, FileSystemLoader
-from abc import ABC, abstractmethod
+from .classroom_users import classroom_users_service
+from .object_storage import object_storage_service
+from openai import OpenAI
+import google.generativeai as genai
+import google.ai.generativelanguage as glm
+import pathlib
+from pdf2image import convert_from_path
+import numpy as np
+import PIL
+from PIL import Image
+import pytz
+import shutil
+import os
+from models import ClassroomUser
+import openai
+import base64
 
-class TaskGenerator(ABC):
-    def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema.messages import HumanMessage, AIMessage
 
-    @abstractmethod
-    async def generate(self, **kwargs):
-        pass
+class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
-    async def call_openai_api(self, system_message: dict, user_message: dict):
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[system_message, user_message]
+    def submit(self, body: AssignmentSubmissionCreate, user_id: str, db: Session):
+        assignment = db.query(Assignment).filter(Assignment.id == body.assignment_id).first()
+
+        student_classrooms = classroom_users_service.get_student_classrooms(db, user_id)
+
+        if assignment.classroom_id not in [classroom.id for classroom in student_classrooms]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is not in any of the student's classrooms")
+
+        if assignment:
+
+            # # UPLOAD PDF TO S3
+            # filename_in_s3 = f"{assignment.id}/{pdf.filename}"
+            # await object_storage_service.s3_upload(pdf, filename_in_s3)
+
+            # if assignment.date_to.replace(tzinfo=pytz.UTC) < datetime.now(pytz.UTC):
+            #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is past due date")
+            submission = AssignmentSubmission(
+                id = str(uuid.uuid4()),
+                student_id = user_id,
+                assignment_id=body.assignment_id,
+                submission_date=datetime.now(),
+                pdf_url=body.pdf_url,
+            )
+            db.add(submission)
+            db.commit()
+            db.refresh(submission)
+            return submission
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+
+    def resubmit(self, body: AssignmentSubmissionResubmit, user_id: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == body.submission_id).first()
+        if submission:
+            if submission.assignment.due_date < datetime.now():
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is past due date")
+            submission.submission = body.submission
+            submission.submitted_at = datetime.now()
+            db.commit()
+            db.refresh(submission)
+            return submission
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+
+    def mark(self, body: AssignmentSubmissionMark, user_id: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == body.id).first()
+        assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id, ClassroomUser.classroom_id == assignment.classroom_id).first()
+        if not classroom_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+        if not classroom_user.role == "teacher":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only teachers can mark assignments")
+        if body.grade > assignment.max_grade:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Grade is higher than the max grade for the assignment")
+        if submission:
+            submission.grade = body.grade
+            db.commit()
+            db.refresh(submission)
+            return submission
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+    
+    async def get_assignment_from_submission(self, submission: AssignmentSubmission, db: Session):
+        pdf = await object_storage_service.s3_download(submission.assignment.pdf_url)
+        if not os.path.exists('services/temp/homeworks'):
+            os.makedirs('services/temp/homeworks')
+        path = f"services/temp/{submission.assignment.pdf_url}"
+        with open(path, "wb") as f:
+            f.write(pdf)
+        return path
+        
+    def get_submissions(self, assignment_id: str, user_id: str, db: Session):
+        # check is the teacher is allowed to see this assignment submissions
+        teacher_classrooms = classroom_users_service.get_teacher_classrooms(db, user_id)
+        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+        if assignment.classroom_id not in [classroom.id for classroom in teacher_classrooms]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+        else:
+            submissions = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).all()
+            for submission in submissions:
+                submission.student_info = submission.student.user_info
+            return submissions
+    
+    async def upload(self, pdf: bytes, assignment_id: str, user_id: str, db: Session):
+        filename_in_s3 = f"{assignment_id}/{user_id}.pdf"
+        await object_storage_service.s3_upload(pdf, filename_in_s3)
+        return filename_in_s3
+    
+    async def check_submission(self, submission_id: str, db: Session):
+        # client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not os.path.exists('services/temp'):
+            os.makedirs('services/temp')
+
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
+        model = genai.GenerativeModel('gemini-pro-vision')
+        # get pds submission from s3
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        print(submission.pdf_url)
+        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        # save pdf locally
+        with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+            f.write(pdf)
+            
+        print(f"services/temp/{submission.pdf_url}")
+        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        images = convert_from_path(f'services/temp/{submission.pdf_url}')
+        image_paths = []
+        for i in range(len(images)):
+            if not os.path.exists('services/temp/images/submission'):
+                os.makedirs('services/temp/images/submission')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+            image_paths.append(image_path)
+            images[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_submission.jpg' )
+        
+
+        # now do same but for the assignment pdf itself
+        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path(f'{assignment_pdf_path}')
+        image_paths2 = []
+        for i in range(len(images)):
+            # create temp directory for images
+            if not os.path.exists('services/temp/images/assignment'):
+                os.makedirs('services/temp/images/assignment')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+            image_paths2.append(image_path)
+            images2[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_assignment.jpg' )
+
+        # cleanup temp directories after jpgs are generated
+        shutil.rmtree('services/temp')
+
+        # assignment_image = Image.open('vertical_assignment.jpg')
+        # submission_image = Image.open('vertical_submission.jpg')
+        # send to gemini
+        # response = model.generate_content(["Write a short, engaging blog post based on this picture. It should include a description of the meal in the photo and talk about my journey meal prepping.", img], stream=True)
+        # response.resolve()
+
+        response = model.generate_content(
+            
+            glm.Content(
+                parts = [
+                    glm.Part(text="Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN."),
+                    glm.Part(
+                        inline_data=glm.Blob(
+                            mime_type='image/jpeg',
+                            data=pathlib.Path('vertical_assignment.jpg').read_bytes()
+                        )
+                    ),
+                    glm.Part(
+                        inline_data=glm.Blob(
+                            mime_type='image/jpeg',
+                            data=pathlib.Path('vertical_submission.jpg').read_bytes()
+                        )
+                    ),
+                ],
+            ),
+            generation_config=genai.types.GenerationConfig(
+            max_output_tokens=100),
+            stream=True)
+        response.resolve()
+        print(response.text)
+        return response.text
+    
+    async def check_submission_gpt(self, submission_id: str, db: Session):
+        # ... rest of your code ...
+        # client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not os.path.exists('services/temp'):
+            os.makedirs('services/temp')
+
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
+        model = genai.GenerativeModel('gemini-pro-vision')
+        # get pds submission from s3
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+        print(submission.pdf_url)
+        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        # save pdf locally
+        pdf_filename = submission.pdf_url.replace('/', '_')
+        with open(f"services/temp/{pdf_filename}", "wb") as f:
+            f.write(pdf)
+        
+            
+        print(f"services/temp/{pdf_filename}")
+        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        images = convert_from_path(f'services/temp/{pdf_filename}')
+        image_paths = []
+        for i in range(len(images)):
+            if not os.path.exists('services/temp/images/submission'):
+                os.makedirs('services/temp/images/submission')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/submission/'+ str(i) +'.jpg'
+            image_paths.append(image_path)
+            images[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_submission.jpg' )
+        
+
+        # now do same but for the assignment pdf itself
+        assignment_pdf_path = await self.get_assignment_from_submission(submission, db)
+        images2 = convert_from_path(f'{assignment_pdf_path}')
+        image_paths2 = []
+        for i in range(len(images)):
+            # create temp directory for images
+            if not os.path.exists('services/temp/images/assignment'):
+                os.makedirs('services/temp/images/assignment')
+            # Save pages as images in the pdf
+            image_path = 'services/temp/images/assignment/'+ str(i) +'.jpg'
+            image_paths2.append(image_path)
+            images2[i].save(image_path, 'JPEG')
+        imgs    = [Image.open(i) for i in image_paths]
+        # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+        min_shape = sorted( [(np.sum(i.size), i.size ) for i in imgs])[0][1]
+        imgs_comb = np.vstack([i.resize(min_shape) for i in imgs])
+        imgs_comb = Image.fromarray( imgs_comb)
+        imgs_comb.save( 'vertical_assignment.jpg' )
+
+        # cleanup temp directories after jpgs are generated
+        shutil.rmtree('services/temp')
+        # Initialize OpenAI API
+        openai.api_key = settings.OPENAI_API_KEY
+
+        # # Convert images to base64
+        with open('vertical_assignment.jpg', 'rb') as f:
+            assignment_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+        with open('vertical_submission.jpg', 'rb') as f:
+            submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
+
+        # Generate prompt
+        # prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
+
+        # # Call OpenAI API
+        # response = openai.Completion.create(
+        #     engine="text-davinci-002",
+        #     prompt=prompt,
+        #     max_tokens=500
+        # )
+
+        transcribed_submission = model.generate_content(
+            
+            glm.Content(
+                parts = [
+                    glm.Part(text="First count how many answers are there, based on this count list all of the answers of the student, just the answers, if student couldnt solve or omitted the problem indicate that. REPLY IN RUSSIAN."),
+                    glm.Part(
+                        inline_data=glm.Blob(
+                            mime_type='image/jpeg',
+                            data=pathlib.Path('vertical_submission.jpg').read_bytes()
+                        )
+                    ),
+                    
+                ],
+            ),
+            # generation_config=genai.types.GenerationConfig(
+            # max_output_tokens=0),
+            stream=True)
+        transcribed_submission.resolve()
+        print(transcribed_submission.text)
+        assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+        assignment_problems = assignment.problems
+        assignment_answers = assignment.answers
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+        model="gpt-4o",
+                messages=[
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "First of all be sure to pay attention on student's answers and the correct answer list. Last image is the image with assignement and correct answers. Check the submitted work based on the provided answers, and provide detailed feedback and final mark. DONT FORGET TO PROVIDE FINAL MARK, IF ANY OF THE PROBLEMS OR QUESTIONS LEFT UNANSWERED IT MEANS NO POINT FOR THAT OR JUST INCORRECT ANSWER. REPLY IN RUSSIAN.",
+                },
+                {
+                "type": "text",
+                "text": f"Here is the transcribed solution of the student: {transcribed_submission.text}",
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                   "url": f"data:image/jpeg;base64,{submission_image_base64}",
+                },
+                },
+                {
+                "type": "text",
+                "text": f"Here are the assignment problems: {assignment_problems}, and here are the assignment answers: {assignment_answers}",
+                },
+                # {
+                # "type": "image_url",
+                # "image_url": {
+                #    "url": f"data:image/jpeg;base64,{assignment_image_base64}",
+                # },
+                # },
+            ],
+            }
+        ],
+        max_tokens=800,
         )
 
-        if not response.choices:
-            raise HTTPException(status_code=500, detail="Failed to generate tasks")
-
+        print(response.choices[0].message.content)
         return response.choices[0].message.content
 
-class WordProblemGenerator(TaskGenerator):
-    async def generate(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
+    async def ocr(self, file: UploadFile, db: Session):
+        content = await file.read()
+        image_base64 = base64.b64encode(content).decode('utf-8')
+        
+        chain = ChatOpenAI(openai_api_key=settings.OPENAI_API_KEY,
+                            model_name="gpt-4o",
+                            temperature=1)
+        ocrs = []
+        for _ in range(3):
+            msg = chain.invoke(
+            [
+                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments"},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}"
+                            },
+                        },
+                    ]
+                )
+            ]
+            )
+            ocrs.append(msg.content)
+        #{"image_base64": image_base64, "text": msg.content}
+        for idx, ocr in enumerate(ocrs):
+            print(f"OCR version {idx + 1}: {ocr}")
+
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
         system_message = {
             "role": "system",
-            "content": f"You are an AI tutor specializing in {subject_aim}. Always reply in Russian, even if the question is in English."
+            "content": "You are a helpful assistant that formats text."
         }
-
         user_message = {
             "role": "user",
-            "content": f"""
-                    Generate {num_questions} word problems for the topic '{topic}'.
-                    Each problem should follow the thematic if it was given: '{thematic}'.
-                    Provide the correct answersw as well.
-                    Don't write any extra comment.
-
-                    Follow this format of response!!! It is critical that you follow this format:
-                    ### Question 1:
-                    text of question
-                    ||| Answer 1:
-                    ### Question 2:
-                    text of question
-                    ||| Answer 2:
-                    and so on.
-                    """
-                }
-
-        return await self.call_openai_api(system_message, user_message)
-
-
-class MultipleChoiceQuestionGenerator(TaskGenerator):
-    async def generate(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
-        system_message = {
-            "role": "system",
-            "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in Russian, even if the question is in English."
-        }
-
-        user_message = {
-            "role": "user",
-            "content": f"Generate {num_questions} multiple choice questions for the topic '{topic}' with {num_choices} choices each. At the end ALWAYS Provide the correct answer as well. Don't write any extra comment.{f'Additional instructions: {extra_info}' if extra_info else ''}"
-        }
-
-        return await self.call_openai_api(system_message, user_message)
-
-class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
-    def __init__(self, db: Session):
-        super().__init__(db)
-        self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)
-        self.mcq_generator = MultipleChoiceQuestionGenerator(api_key=settings.OPENAI_API_KEY)
-
-    async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
-        return {"word_problems": await self.word_problem_generator.generate(subject_aim, topic, num_questions, thematic)}
-
-    async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
-        return {"questions": await self.mcq_generator.generate(subject, topic, grade_level, difficulty, num_questions, num_choices, extra_info)}
-
-
-    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
-
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
-        if subject.lower() == 'mathematics':
-            # Generate answers
-            if extra_info is not None:
-                # answers = client.chat.completions.create(
-                #     model="gpt-4-turbo",
-                #     messages=[
-                #         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Also account for this: {extra_info}"},
-                #         {"role": "user", "content": f"Generate answers for which could be used for {topic} problems. Only provide a python list (e.g [1,2,3,...]) of {quantity} answers and NOTHING ELSE!"}
-                #     ]
-                # )
-
-                # problems = client.chat.completions.create(
-                #     model="gpt-4-turbo",
-                #     messages=[
-                #         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}"},
-                #         {"role": "user", "content": f"Generate problems for {topic} based on these answers: {answers.choices[0].message.content}. DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
-                #     ]
-                # )
-
-                # Generate problems based on answers
-                problems = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
-                    ]
-                )
-
-                answers = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, \"2x\"...]) of answers and NOTHING ELSE!, DO NOT FORGET TO ENCLOSE ALL ANSWERS IN QUOTES!"}
-                    ]
-                )
-            else:
-                
-
-                # Generate problems based on answers
-                problems = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
-                    ]
-                )
-
-                answers = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, ...]) of answers and NOTHING ELSE!"}
-                    ]
-                )
-
-            # # Solve problems and compare with answers
-            # solutions = client.chat.completions.create(
-            #     model="gpt-4-turbo",
-            #     messages=[
-            #         {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}."},
-            #         {"role": "user", "content": f"Solve these problems: {problems}."}
-            #     ]
-            # )
-
-            return {"problems": problems.choices[0].message.content, 
-                    "answers": answers.choices[0].message.content,
-                    "user_id": user_id}
-
+            "content": f"""Given these 3 OCR text versions of the same image: 
+            1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
+            choose the most cohesive and logical elements to create the best OCR text.
+            Make sure signs and words make sense logically.
+            Do not add any comments, just return the best OCR you think of."""
+        }   
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            temperature=1,
+            messages=[system_message, user_message]
+        )
+        
+        text = response.choices[0].message.content
+        print(f"RAW OCR: {msg.content}\nProcessed OCR: {text}")
+        return {"text": text}
+    
+    async def solve_task(self, ocr_result: str):
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        assistant = client.beta.assistants.create(
+                            name="Math Tutor",
+                            instructions="You are a personal math tutor. Write and run code to answer math questions.",
+                            tools=[{"type": "code_interpreter"}],
+                            model="gpt-4o"
+                        )
+        thread = client.beta.threads.create()
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=f"""
+            Check the given math example with student's solution: {ocr_result} and comment on it. 
+            Check carefully everything that needs to be checked and provide general comment on the solution.
+            Use the Russian language in the feedback ALWAYS!. Make everything easy to read and follow. 
+            Do not return the same text as the student's work, only reference specific parts in the feedback if necessary. 
+            """
+        )
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant.id
+        )
+        if run.status == 'completed':
+            messages = client.beta.threads.messages.list(
+                thread_id=thread.id
+            )
+            agent_feedback = messages
+            if not messages:
+                agent_feedback = "No feedback received."
         else:
-            if extra_info is not None:
-                client = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Generate a {topic} homework. Also account for this: {extra_info}"}
-                    ]
-                )
-            else:
-                client = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in russian, even if the question is in english."},
-                        {"role": "user", "content": f"Generate a {topic} homework."}
-                    ]
-                )
-            return {"problems": client.choices[0].message.content}
-        
-
-
-    # def generate_pdf_from_homework(self, problems, answers, subject):
-    #     filename = f"{subject}_{datetime.now()}_homework.pdf"
-    #     c = canvas.Canvas(filename, pagesize=letter)
-    #     width, height = letter
-
-    #     # Write problems
-    #     c.setFont("Helvetica", 12)
-    #     c.drawString(30, height - 50, "Problems:")
-    #     textobject = c.beginText()
-    #     textobject.setTextOrigin(30, height - 70)
-    #     textobject.setFont("Helvetica", 10)
-    #     for problem in problems:
-    #         textobject.textLine(problem)
-    #     c.drawText(textobject)
-
-    #     # Write answers
-    #     c.setFont("Helvetica", 12)
-    #     c.drawString(30, height - 120, "Answers:")
-    #     textobject = c.beginText()
-    #     textobject.setTextOrigin(30, height - 140)
-    #     textobject.setFont("Helvetica", 10)
-    #     for answer in answers:
-    #         textobject.textLine(answer)
-    #     c.drawText(textobject)
-
-    #     c.save()   
-    #     return filename
+            agent_feedback = "Feedback generation in progress or failed."
+        return {"Feedback": agent_feedback}
     
-    def generate_pdf(self, problems, answers, output_filename='homework.pdf'):
-        # Convert markdown problems to HTML
-        html_problems = markdown2.markdown(problems)
-        
-        # Prepare the answers list from the string
-        if answers:
-            try:
-                answers_list = eval(answers)
-            except:
-                answers_list = answers.split('\n')
+    def get_submission_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == assignment_id).first()
+        user = db.query(ClassroomUser).filter(ClassroomUser.user_id == user_id).first()
+        if user.role == "teacher":
+            teacher_classrooms = classroom_users_service.get_teacher_classrooms(db, user_id)
+            assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
+            if assignment.classroom_id not in [classroom.id for classroom in teacher_classrooms]:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Teacher is not in the classroom of the assignment")
+            return submission
         else:
-            answers_list = []
-        # Load template
-        env = Environment(loader=FileSystemLoader('templates'))
-        template = env.get_template('template.html')
+            if submission:
+                if submission.student_id == user_id:
+                    return submission
+                else:
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+            
+    def get_by_id(self, db: Session, assignment_id: str, user_id: str) -> AssignmentSubmission:
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.assignment_id == assignment_id).first()
+        if submission:
+            if submission.student_id == user_id:
+                return submission
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this submission")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found") 
+
+    def download(self, submission_id: str, user_id: str, db: Session):
+        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
+
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id ==  user_id, ClassroomUser.classroom_id==submission.assignment.classroom_id).first()
+        if submission:
+            if classroom_user:
+                if classroom_user.role == "teacher":
+                    pdf = object_storage_service.s3_download(submission.pdf_url)
+                    return pdf
+            if submission.student_id == user_id:
+                pdf = object_storage_service.s3_download(submission.pdf_url)
+                return pdf
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
         
-        # Render the template with problems and answers
-        rendered_html = template.render(problems=html_problems, answers=answers_list)
-        
-        # Convert to PDF
-        # pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
-        pdfkit.from_string(rendered_html, output_filename)
-
-        print(f'PDF generated: {output_filename}')
-        return output_filename
-    
-    async def upload_pdf_to_s3(self, filename):
-        # get the file from the local storage
-        file = open(filename, 'rb')
-        # upload the file to s3 as bytes
-        filename = "homeworks/" + uuid.uuid4().hex + ".pdf"
-        print(2)
-        await object_storage_service.s3_upload(file.read(), filename)
-        print(2.5)
-        return filename
-    
-
-    def create_homework(self, db: Session,
-               obj_in: HomeworkAssignmentCreate, pdf_url: str):
-        obj_in_data = jsonable_encoder(obj_in)
-        obj_in_data['pdf_url'] = pdf_url
-        obj_in_data['id'] = str(uuid.uuid4())
-
-        # remove problems and answers from the dict
-        obj_in_data.pop('user_id')
-        db_obj = self.model(**obj_in_data)  # type: ignore
-        db.add(db_obj)
-        db.flush()
-        
-        return db_obj
-    
-    async def approve_homework(self, homework: HomeworkAssignmentCreate, db: Session):
-        # Generate pdf from problems and answers
-        pdf = self.generate_pdf(homework.problems, homework.answers)
-        # Upload pdf to s3
-        filename = await self.upload_pdf_to_s3(pdf)
-        return self.create_homework(db, homework, filename)
-    
-    async def create_from_pdf(self, body: AssignmentCreate, filename: str, db: Session):
-        return self.create_homework(db, body, filename)
-    
-    def get_all_teacher_assignments(self, classroom_id: str, db: Session):
-        return db.query(Assignment).filter(Assignment.classroom_id == classroom_id).all()
-    
-    def get_all_student_assignments(self, classroom_id: str, user_id: str, db: Session):
-        assignments = db.query(Assignment).filter(Assignment.classroom_id == classroom_id).all()
-        return [AssignmentsStudentsReadShort.from_orm(assignment) for assignment in assignments]
-
-
-    # def save_homework_to_db(self, problems, answers, subject, date_from: datetime, date_to: datetime, description: str, max_grade: float, name: str, db):
-    #     pdf = self.generate_pdf_from_homework(problems, answers, subject)
-    #     assignment = Assignment(type='homework', date_from=date_from, date_to=date_to, description=description, pdf_url=pdf, max_grade=100, name=max_grade, name=name, created_at=datetime.now(), updated_at=datetime.now())
-    #     db.add(assignment)
-    #     db.commit()
-    #     return assignment
-
-    # def get_student_assignment(self, assignment_id: str, user_id: str, db: Session):
-    #     assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-    #     if assignment:
-    #         return assignment
-    #     else:
-    #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
-        
-    async def download_pdf_from_s3(self, assignment_id: str, user_id: str, db: Session):
-        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == assignment.classroom_id, ClassroomUser.user_id == user_id).first()
-        if classroom_user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
-
-        return await object_storage_service.s3_download(assignment.pdf_url)
-    
-    def get_student_assignment(self, classroom_id: str, assignment_id: str, user_id: str, db: Session):
-        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == classroom_id, ClassroomUser.user_id == user_id).first()
-        if classroom_user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
-        return assignment
-    
-    def get_teacher_assignment(self, classroom_id: str, assignment_id: str, user_id: str, db: Session):
-        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == classroom_id, ClassroomUser.user_id == user_id).first()
-        if classroom_user is None or classroom_user.role != "teacher":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
-        return assignment
-    
-    def delete(self, assignment_id: str, teacher_id: str, db):
-        assignment = db.query(Assignment).filter(Assignment.id==assignment_id).first()
-
-        if not assignment:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
-        
-        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == assignment.classroom_id, ClassroomUser.user_id == teacher_id).first()
-        if not classroom_user or classroom_user.role != "teacher":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
-        
-        db.delete(assignment)
-        db.commit()
-        return "success"
-
-
-assignment_service = AssignmentService(Assignment)
+assignment_submission_service = AssignmentSubmissionService(AssignmentSubmission)
