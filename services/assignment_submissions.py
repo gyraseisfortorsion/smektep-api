@@ -467,7 +467,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             
             filename = 'vertical_submission.jpg'
         # cleanup temp directories after jpgs are generated
-        shutil.rmtree('services/temp')
+
         # Initialize OpenAI API
         openai.api_key = settings.OPENAI_API_KEY
 
