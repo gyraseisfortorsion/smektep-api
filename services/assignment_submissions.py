@@ -23,6 +23,9 @@ import os
 from models import ClassroomUser
 import openai
 import base64
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema.messages import HumanMessage, AIMessage
+
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
     def submit(self, body: AssignmentSubmissionCreate, user_id: str, db: Session):
@@ -470,30 +473,56 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
         with open(filename, 'rb') as f:
             submission_image_base64 = base64.b64encode(f.read()).decode('utf-8')
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = client.chat.completions.create(
-        model="gpt-4o",
-                messages=[
-            {
+        chain = ChatOpenAI(openai_api_key=settings.OPENAI_API_KEY,
+                            model_name="gpt-4o",
+                            temperature=1)
+        ocrs = []
+        for _ in range(3):
+            msg = chain.invoke(
+            [
+                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments"},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{submission_image_base64}",
+                            },
+                        },
+                    ]
+                )
+            ]
+            )
+            ocrs.append(msg.content)
+        #{"image_base64": image_base64, "text": msg.content}
+        for idx, ocr in enumerate(ocrs):
+            print(f"OCR version {idx + 1}: {ocr}")
+
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        system_message = {
+            "role": "system",
+            "content": "You are a helpful assistant that formats text."
+        }
+        user_message = {
             "role": "user",
-            "content": [
-                {
-                "type": "text",
-                "text": "Transcribe the student's submission.",
-                },
-                {
-                "type": "image_url",
-                "image_url": {
-                   "url": f"data:image/jpeg;base64,{submission_image_base64}",
-                },
-                },
-            ],
-            }
-        ],
-        max_tokens=800,
+            "content": f"""Given these 3 OCR text versions of the same image: 
+            1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
+            choose the most cohesive and logical elements to create the best OCR text.
+            Make sure signs and words make sense logically.
+            Do not add any comments, just return the best OCR you think of."""
+        }   
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            temperature=1,
+            messages=[system_message, user_message]
         )
+        
+        text = response.choices[0].message.content
+        print(f"RAW OCR: {msg.content}\nProcessed OCR: {text}")
         shutil.rmtree('services/temp')
-        return response.choices[0].message.content
+        return text
+        # return response.choices[0].message.content
     def save_transcription(self, submission_id: str, transcription: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         submission.transcription = transcription
