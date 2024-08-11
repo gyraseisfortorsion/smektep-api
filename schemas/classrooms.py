@@ -47,3 +47,6 @@ class ClassroomGradesRead(Model):
     student_id: uuid.UUID
     student_info: UserInfoFullName
 
+class AllClassroomGradesRead(Model):
+    classroom_id: uuid.UUID
+    gradebook: List[ClassroomGradesRead]
