@@ -51,7 +51,7 @@ async def get_image(classroom_id: str, credentials: HTTPAuthorizationCredentials
     )
     
 @router.get("/gradebook/{classroom_id}", response_model=List[ClassroomGradesRead], description="Get all grades for a classroom. Only for teachers and curators")
-def get_classroom_grades(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+def get_classroom_grades_for_teacher(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     return classroom_service.get_classroom_grades_for_teacher(db, classroom_id, user_id)
 
@@ -61,12 +61,12 @@ def get_student_grades(classroom_id: str, credentials: HTTPAuthorizationCredenti
     return classroom_service.get_classroom_grades_for_student(db, classroom_id, user_id)
 
 @router.get("/gradebook/all/{classroom_id}", response_model=List[AllClassroomGradesRead], description="Get all grades for a classroom. Only for teachers and curators")
-def get_all_classroom_grades(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+def get_all_classroom_grades_for_teacher(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     return classroom_service.get_all_grades_for_teacher(db, classroom_id, user_id)
 
 @router.get("/gradebook/all/student/{classroom_id}", response_model=List[AllClassroomGradesRead], description="Get all grades for a classroom. Only for students")
-def get_all_classroom_grades(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+def get_all_classroom_grades_for_student(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     return classroom_service.get_all_grades_for_student(db, classroom_id, user_id)
 """
