@@ -104,7 +104,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         res = []
         for classroom in classrooms:
             grades_by_classroom = {}
-            for assignment in classroom.assignments:
+            for assignment in classroom.classroom.assignments:
                 grades = []
                 for submission in assignment.assignment_submissions:
                     # Assuming there's a Student model with a method to get the full name by student_id
@@ -134,7 +134,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         res = []
         for classroom in classrooms:
             grades_by_classroom = {}
-            for assignment in classroom.assignments:
+            for assignment in classroom.classroom.assignments:
                 grades = []
                 for submission in assignment.assignment_submissions:
                     if submission.student_id == user_id:
