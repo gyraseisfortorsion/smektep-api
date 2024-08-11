@@ -127,10 +127,12 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.file_urls)
-        pdf = await object_storage_service.s3_download(submission.file_urls)
-        # save pdf locally
-        with open(f"services/temp/{submission.file_urls}", "wb") as f:
-            f.write(pdf)
+        file_urls = eval(submission.file_urls)
+        for file in file_urls:
+            temp_file = await object_storage_service.s3_download(file)
+            # save pdf locally
+            with open(f"services/temp/{file}", "wb") as f:
+                f.write(temp_file)
             
         print(f"services/temp/{submission.file_urls}")
         # images = convert_from_path(f"services/temp/{submission.file_urls}")
