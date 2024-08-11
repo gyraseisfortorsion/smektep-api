@@ -102,10 +102,10 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         if user.role not in ["teacher", "secondary_teacher", "curator"]:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can view grades")
         res = []
+        grades_by_classroom = {}
         for classroom in classrooms:
-            grades_by_classroom = {}
+            grades = []
             for assignment in classroom.classroom.assignments:
-                grades = []
                 for submission in assignment.assignment_submissions:
                     # Assuming there's a Student model with a method to get the full name by student_id
                     student = submission.student
@@ -120,8 +120,8 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                         "max_grade": assignment.max_grade
                     }
                     grades.append(grade_info)
-            grades = sorted(grades, key=lambda x: x['date_to'])
-            grades_by_classroom["classroom_id"] = classroom.id
+                grades = sorted(grades, key=lambda x: x['date_to'])
+            grades_by_classroom["classroom_id"] = classroom.classroom.id
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
         return res
@@ -132,10 +132,10 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
         if user.role != "student":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view grades")
         res = []
+        grades_by_classroom = {}
         for classroom in classrooms:
-            grades_by_classroom = {}
+            grades = []
             for assignment in classroom.classroom.assignments:
-                grades = []
                 for submission in assignment.assignment_submissions:
                     if submission.student_id == user_id:
                         student = submission.student
@@ -151,7 +151,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                         }
                         grades.append(grade_info)
             grades = sorted(grades, key=lambda x: x['date_to'])
-            grades_by_classroom["classroom_id"] = classroom.id
+            grades_by_classroom["classroom_id"] = classroom.classroom.id
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
         return res
