@@ -18,7 +18,7 @@ class Assignment(Model):
     description = Column(Text)
     pdf_url = Column(Text)
     max_grade = Column(Float(53))
-    name = Column(String, nullable=False)
+    title = Column(String, nullable=False)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     answers = Column(Text)
