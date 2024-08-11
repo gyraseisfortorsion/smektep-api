@@ -124,6 +124,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
             grades_by_classroom["classroom_id"] = classroom.classroom.id
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
+            grades_by_classroom={}
         return res
     
     def get_all_grades_for_student(self, db: Session, user_id: str):
@@ -150,10 +151,11 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                             "max_grade": assignment.max_grade
                         }
                         grades.append(grade_info)
-            grades = sorted(grades, key=lambda x: x['date_to'])
+                grades = sorted(grades, key=lambda x: x['date_to'])
             grades_by_classroom["classroom_id"] = classroom.classroom.id
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
+            grades_by_classroom={}
         return res
     # def generate_code(self, db: Session, classroom_id):
 
