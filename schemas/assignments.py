@@ -122,7 +122,7 @@ class AssignmentSubmissionRead(Model):
     grade: Optional[float]
     commentaries: Optional[str]
     ai_commentary: Optional[str]
-    pdf_url: Optional[str]
+    file_urls: List[Optional[str]]
     student_info: StudentNameRead
     assignment: AssignmentsReadShort
     created_at: Optional[datetime]

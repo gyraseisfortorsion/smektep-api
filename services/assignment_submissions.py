@@ -49,7 +49,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 student_id = user_id,
                 assignment_id=body.assignment_id,
                 submission_date=datetime.now(),
-                pdf_url=body.pdf_url,
+                file_urls=body.file_urls,
             )
             db.add(submission)
             db.commit()
@@ -111,7 +111,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             return submissions
     
     async def upload(self, pdf: bytes, assignment_id: str, user_id: str, file_ext:str, db: Session):
-        filename_in_s3 = f"{assignment_id}/{user_id}.{file_ext}"
+        filename_in_s3 = f"{assignment_id}/{user_id}_{uuid.uuid()}.{file_ext}"
         if file_ext not in ['pdf', 'jpg', 'jpeg', 'png']:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File extension not supported")
         await object_storage_service.s3_upload(pdf, filename_in_s3)
@@ -126,15 +126,15 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         model = genai.GenerativeModel('gemini-pro-vision')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
-        print(submission.pdf_url)
-        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        print(submission.file_urls)
+        pdf = await object_storage_service.s3_download(submission.file_urls)
         # save pdf locally
-        with open(f"services/temp/{submission.pdf_url}", "wb") as f:
+        with open(f"services/temp/{submission.file_urls}", "wb") as f:
             f.write(pdf)
             
-        print(f"services/temp/{submission.pdf_url}")
-        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
-        images = convert_from_path(f'services/temp/{submission.pdf_url}')
+        print(f"services/temp/{submission.file_urls}")
+        # images = convert_from_path(f"services/temp/{submission.file_urls}")
+        images = convert_from_path(f'services/temp/{submission.file_urls}')
         image_paths = []
         for i in range(len(images)):
             if not os.path.exists('services/temp/images/submission'):
@@ -215,16 +215,16 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
-        print(submission.pdf_url)
-        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        print(submission.file_urls)
+        pdf = await object_storage_service.s3_download(submission.file_urls)
         # save pdf locally
-        pdf_filename = submission.pdf_url.replace('/', '_')
+        pdf_filename = submission.file_urls.replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
         
             
         print(f"services/temp/{pdf_filename}")
-        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        # images = convert_from_path(f"services/temp/{submission.file_urls}")
         images = convert_from_path(f'services/temp/{pdf_filename}')
         image_paths = []
         for i in range(len(images)):
@@ -356,19 +356,19 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
-        print(submission.pdf_url)
-        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        print(submission.file_urls)
+        pdf = await object_storage_service.s3_download(submission.file_urls)
         # save pdf locally
-        pdf_filename = submission.pdf_url.replace('/', '_')
+        pdf_filename = submission.file_urls.replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
         
         filename = f"services/temp/{pdf_filename}"
         print(f"services/temp/{pdf_filename}")
-        # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+        # images = convert_from_path(f"services/temp/{submission.file_urls}")
         if pdf_filename.endswith('.pdf'):
             
-            # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+            # images = convert_from_path(f"services/temp/{submission.file_urls}")
             images = convert_from_path(f'services/temp/{pdf_filename}')
             image_paths = []
             for i in range(len(images)):
@@ -438,17 +438,17 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
-        print(submission.pdf_url)
-        pdf = await object_storage_service.s3_download(submission.pdf_url)
+        print(submission.file_urls)
+        pdf = await object_storage_service.s3_download(submission.file_urls)
         # save pdf locally
-        pdf_filename = submission.pdf_url.replace('/', '_')
+        pdf_filename = submission.file_urls.replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
         filename = f"services/temp/{pdf_filename}"
         if pdf_filename.endswith('.pdf'):
             
             print(f"services/temp/{pdf_filename}")
-            # images = convert_from_path(f"services/temp/{submission.pdf_url}")
+            # images = convert_from_path(f"services/temp/{submission.file_urls}")
             images = convert_from_path(f'services/temp/{pdf_filename}')
             image_paths = []
             for i in range(len(images)):
@@ -614,10 +614,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         if submission:
             if classroom_user:
                 if classroom_user.role == "teacher":
-                    pdf = object_storage_service.s3_download(submission.pdf_url)
+                    pdf = object_storage_service.s3_download(submission.file_urls)
                     return pdf
             if submission.student_id == user_id:
-                pdf = object_storage_service.s3_download(submission.pdf_url)
+                pdf = object_storage_service.s3_download(submission.file_urls)
                 return pdf
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")

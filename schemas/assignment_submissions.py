@@ -12,7 +12,7 @@ class AssignmentSubmissionCreate(Model):
     student_id: uuid.UUID
     assignment_id: uuid.UUID
     submission_date: datetime
-    pdf_url: Optional[str]
+    file_urls: List[Optional[str]]
     commentaries: Optional[str]
 
 class AssignmentSubmissionMark(ReadModel):

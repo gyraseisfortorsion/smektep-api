@@ -15,7 +15,7 @@ class AssignmentSubmission(Model):
     parent_id = Column(ForeignKey('assignment_submissions.id'))
     grade = Column(Float(53))
     commentaries = Column(Text)
-    pdf_url = Column(Text)
+    file_urls = Column(Text)
     transcription = Column(Text)
     ai_commentary = Column(Text)
 
