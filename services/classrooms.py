@@ -58,7 +58,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                 student_info = student.user_info  # Assuming the Student model has a full_name attribute
                 grade_info = {
                     "assignment_id": assignment.id,
-                    "assignment_name": assignment.name,
+                    "assignment_name": assignment.title,
                     "date_to": assignment.date_to,
                     "grade": submission.grade,
                     "student_info": student_info,
@@ -85,7 +85,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                     student_info = student.user_info
                     grade_info = {
                         "assignment_id": assignment.id,
-                        "assignment_name": assignment.name,
+                        "assignment_name": assignment.title,
                         "date_to": assignment.date_to,
                         "grade": submission.grade,
                         "student_info": student_info,
@@ -112,7 +112,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                     student_info = student.user_info
                     grade_info = {  
                         "assignment_id": assignment.id,
-                        "assignment_name": assignment.name,
+                        "assignment_name": assignment.title,
                         "date_to": assignment.date_to,
                         "grade": submission.grade,
                         "student_info": student_info,
@@ -142,7 +142,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                         student_info = student.user_info
                         grade_info = {
                             "assignment_id": assignment.id,
-                            "assignment_name": assignment.name,
+                            "assignment_name": assignment.title,
                             "date_to": assignment.date_to,
                             "grade": submission.grade,
                             "student_info": student_info,
