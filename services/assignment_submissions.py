@@ -617,15 +617,17 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
 
         classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id ==  user_id, ClassroomUser.classroom_id==submission.assignment.classroom_id).first()
+        file_urls = eval(submission.file_urls)
         if submission:
             if classroom_user:
                 if classroom_user.role == "teacher":
-                    pdf = object_storage_service.s3_download(submission.file_urls[0])
-                    print(submission.file_urls[0])
+                    
+                    pdf = object_storage_service.s3_download(file_urls[0])
+                    print(file_urls[0])
                     return pdf
             if submission.student_id == user_id:
-                pdf = object_storage_service.s3_download(submission.file_urls[0])
-                print(submission.file_urls[0])
+                pdf = object_storage_service.s3_download(file_urls[0])
+                print(file_urls[0])
                 return pdf
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
