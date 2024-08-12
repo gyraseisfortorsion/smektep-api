@@ -444,9 +444,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.file_urls)
-        pdf = await object_storage_service.s3_download(submission.file_urls[0])
-        # save pdf locally
         file_urls = eval(submission.file_urls)
+        pdf = await object_storage_service.s3_download(file_urls[0])
+        # save pdf locally
         pdf_filename = file_urls[0].replace('/', '_')
         with open(f"services/temp/{pdf_filename}", "wb") as f:
             f.write(pdf)
