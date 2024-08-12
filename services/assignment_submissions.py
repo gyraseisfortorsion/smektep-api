@@ -621,9 +621,11 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             if classroom_user:
                 if classroom_user.role == "teacher":
                     pdf = object_storage_service.s3_download(submission.file_urls[0])
+                    print(submission.file_urls[0])
                     return pdf
             if submission.student_id == user_id:
                 pdf = object_storage_service.s3_download(submission.file_urls[0])
+                print(submission.file_urls[0])
                 return pdf
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
