@@ -44,13 +44,13 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
             # if assignment.date_to.replace(tzinfo=pytz.UTC) < datetime.now(pytz.UTC):
             #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Assignment is past due date")
-            temp_file_urls = f'["{body.file_urls}"]'
+            # temp_file_urls = f'["{body.file_urls}"]'
             submission = AssignmentSubmission(
                 id = str(uuid.uuid4()),
                 student_id = user_id,
                 assignment_id=body.assignment_id,
                 submission_date=datetime.now(),
-                file_urls=temp_file_urls,
+                file_urls=body.file_urls,
             )
             db.add(submission)
             db.commit()

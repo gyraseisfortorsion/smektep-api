@@ -52,3 +52,5 @@ class AssignmentSubmissionReadTeacher(Model):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
+class SubmitFile(Model):
+    submission_id: str
