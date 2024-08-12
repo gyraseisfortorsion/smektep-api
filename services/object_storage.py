@@ -35,5 +35,11 @@ class ObjectStorage:
             return self.s3.Object('smekteps3', key).delete()
         except ClientError as err:
             print(err)
+    
+    async def s3_list_sorted_by_date(self, directory: str):
+        keys = []
+        for obj in self.bucket.objects.filter(Prefix=directory):
+            keys.append(obj.key)
+        return sorted(keys, key=lambda x: x.last_modified)
 
 object_storage_service = ObjectStorage(settings)

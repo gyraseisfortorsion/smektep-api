@@ -12,7 +12,7 @@ class AssignmentSubmissionCreate(Model):
     student_id: uuid.UUID
     assignment_id: uuid.UUID
     submission_date: datetime
-    file_urls: List[Optional[str]]
+    file_urls: Optional[str]
     commentaries: Optional[str]
 
 class AssignmentSubmissionMark(ReadModel):
@@ -25,7 +25,7 @@ class AssignmentSubmissionResubmit(ReadModel):
     submission_date: datetime
     parent_id: Optional[uuid.UUID]
     commentaries: Optional[str]
-    pdf_url: Optional[str]
+    file_urls: Optional[str]
 
 class AssignmentSubmissionReadShort(Model):
     model_config = ConfigDict(from_attributes=True)
@@ -34,7 +34,7 @@ class AssignmentSubmissionReadShort(Model):
     submission_date: datetime
     grade: Optional[float]
     commentaries: Optional[str]
-    pdf_url: Optional[str]
+    file_urls: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
@@ -46,7 +46,7 @@ class AssignmentSubmissionReadTeacher(Model):
     submission_date: datetime
     grade: Optional[float]
     commentaries: Optional[str]
-    pdf_url: Optional[str]
+    file_urls: Optional[str]
     ai_commentary: Optional[str]
     student_info: StudentNameRead
     created_at: Optional[datetime]
