@@ -400,6 +400,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         # openai.api_key = settings.OPENAI_API_KEY
 
         chain = ChatGoogleGenerativeAI(
+                    google_api_key=settings.GOOGLE_API_KEY,
                     model="gemini-1.5-flash",
                     temperature=0,
                     max_tokens=None,
