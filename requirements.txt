@@ -47,3 +47,4 @@ numpy==1.26.4
 pytz
 langchain
 langchain-community
+langchain-google-genai

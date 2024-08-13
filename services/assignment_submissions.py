@@ -25,6 +25,7 @@ import openai
 import base64
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema.messages import HumanMessage, AIMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
@@ -391,12 +392,21 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             imgs_comb.save( 'vertical_submission.jpg' )
             filename = 'vertical_submission.jpg'
 
+        with open(filename, "rb") as f:
+            image_base64 = base64.b64encode(f.read()).decode('utf-8')
         # cleanup temp directories after jpgs are generated
         
         # Initialize OpenAI API
-        openai.api_key = settings.OPENAI_API_KEY
+        # openai.api_key = settings.OPENAI_API_KEY
 
-
+        chain = ChatGoogleGenerativeAI(
+                    model="gemini-1.5-flash",
+                    temperature=0,
+                    max_tokens=None,
+                    timeout=None,
+                    max_retries=2,
+                    # other params...
+                )
 
         # Generate prompt
         # prompt = f"Check the submitted work based on the provided answers, and provide detailed feedback and final mark. REPLY IN RUSSIAN.\n\n[Assignment Image]\n{assignment_image_base64}\n\n[Submission Image]\n{submission_image_base64}"
@@ -407,31 +417,80 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         #     prompt=prompt,
         #     max_tokens=500
         # )
+        ocrs = []
+        for _ in range(3):
+            msg = chain.invoke(
+            [
+                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
+                HumanMessage(
+                    content=[
+                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments"},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}",
+                            },
+                        },
+                    ]
+                )
+            ]
+            )
+            ocrs.append(msg.content)
+        #{"image_base64": image_base64, "text": msg.content}
+        for idx, ocr in enumerate(ocrs):
+            print(f"OCR version {idx + 1}: {ocr}")
 
-        transcribed_submission = model.generate_content(
-            
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        system_message = {
+            "role": "system",
+            "content": "You are a helpful assistant that formats text."
+        }
+        user_message = {
+            "role": "user",
+            "content": f"""Given these 3 OCR text versions of the same image: 
+            1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
+            choose the most cohesive and logical elements to create the best OCR text.
+            Make sure signs and words make sense logically.
+            Do not add any comments, just return the best OCR you think of."""
+        }
+        response = model.generate_content(
             glm.Content(
                 parts = [
-                    glm.Part(text="Transcribe the student's submission."),
-                    glm.Part(
-                        inline_data=glm.Blob(
-                            mime_type='image/jpeg',
-                            data=pathlib.Path(filename).read_bytes()
-                        )
-                    ),
-                    
+                    glm.Part(text=f"Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of."),
                 ],
             ),
-            # generation_config=genai.types.GenerationConfig(
-            # max_output_tokens=0),
-            stream=True)
-        shutil.rmtree('services/temp')
-        try: 
-            transcribed_submission.resolve()
-            transcribed_submission = transcribed_submission.text
+            generation_config=genai.types.GenerationConfig(
+            max_output_tokens=10000))
+        try:
+            response.resolve()
+            return response.text
         except:
-            transcribed_submission = await self.transcribe_gpt(submission_id, db)
-        return transcribed_submission
+            return await self.transcribe_gpt(submission_id, db)
+        return 0
+        # transcribed_submission = model.generate_content(
+            
+        #     glm.Content(
+        #         parts = [
+        #             glm.Part(text="Transcribe the student's submission."),
+        #             glm.Part(
+        #                 inline_data=glm.Blob(
+        #                     mime_type='image/jpeg',
+        #                     data=pathlib.Path(filename).read_bytes()
+        #                 )
+        #             ),
+                    
+        #         ],
+        #     ),
+        #     # generation_config=genai.types.GenerationConfig(
+        #     # max_output_tokens=0),
+        #     stream=True)
+        # shutil.rmtree('services/temp')
+        # try: 
+        #     transcribed_submission.resolve()
+        #     transcribed_submission = transcribed_submission.text
+        # except:
+        #     transcribed_submission = await self.transcribe_gpt(submission_id, db)
+        # return transcribed_submission
     
     
     async def transcribe_gpt(self, submission_id: str, db: Session):
