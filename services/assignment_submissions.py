@@ -461,6 +461,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             ),
             generation_config=genai.types.GenerationConfig(
             max_output_tokens=10000))
+        shutil.rmtree('services/temp')
         try:
             response.resolve()
             return response.text
