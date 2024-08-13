@@ -48,3 +48,4 @@ pytz
 langchain
 langchain-community
 langchain-google-genai
+pylatexenc

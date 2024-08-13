@@ -26,6 +26,7 @@ import base64
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema.messages import HumanMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pylatexenc.latex2text import LatexNodes2Text
 
 class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSubmissionCreate, AssignmentSubmissionResubmit]):
 
@@ -402,7 +403,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         chain = ChatGoogleGenerativeAI(
                     google_api_key=settings.GOOGLE_API_KEY,
                     model="gemini-1.5-flash",
-                    temperature=0,
+                    temperature=1,
                     max_tokens=None,
                     timeout=None,
                     max_retries=2,
@@ -457,15 +458,15 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         response = model.generate_content(
             glm.Content(
                 parts = [
-                    glm.Part(text=f"Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of."),
+                glm.Part(text=f"You are a helpful assistant that formats text.Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. Return in the UNICODE format. NOT IN LATEX."),
                 ],
             ),
-            generation_config=genai.types.GenerationConfig(
-            max_output_tokens=10000))
+           stream=True)
         shutil.rmtree('services/temp')
         try:
             response.resolve()
-            return response.text
+            result = LatexNodes2Text().latex_to_text(response.text)
+            return result
         except:
             return await self.transcribe_gpt(submission_id, db)
         return 0
@@ -586,9 +587,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         )
         
         text = response.choices[0].message.content
+        result = LatexNodes2Text().latex_to_text(text)
         print(f"RAW OCR: {msg.content}\nProcessed OCR: {text}")
         shutil.rmtree('services/temp')
-        return text
+        return result
         # return response.choices[0].message.content
     def save_transcription(self, submission_id: str, transcription: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
