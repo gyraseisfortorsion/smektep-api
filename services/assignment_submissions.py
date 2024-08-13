@@ -424,7 +424,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
                 HumanMessage(
                     content=[
-                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments"},
+                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments."},
                         {
                             "type": "image_url",
                             "image_url": {
@@ -549,7 +549,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed."),
                 HumanMessage(
                     content=[
-                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments"},
+                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments. Don't reply in LaTeX, always respond in Unicode characaters."},
                         {
                             "type": "image_url",
                             "image_url": {
