@@ -122,6 +122,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                     grades.append(grade_info)
                 grades = sorted(grades, key=lambda x: x['date_to'])
             grades_by_classroom["classroom_id"] = classroom.classroom.id
+            grades_by_classroom["classroom_name"] = classroom.classroom.name
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
             grades_by_classroom={}
@@ -153,6 +154,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                         grades.append(grade_info)
                 grades = sorted(grades, key=lambda x: x['date_to'])
             grades_by_classroom["classroom_id"] = classroom.classroom.id
+            grades_by_classroom["classroom_name"] = classroom.classroom.name
             grades_by_classroom["gradebook"] = grades
             res.append(grades_by_classroom)
             grades_by_classroom={}
