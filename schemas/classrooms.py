@@ -49,4 +49,5 @@ class ClassroomGradesRead(Model):
 
 class AllClassroomGradesRead(Model):
     classroom_id: uuid.UUID
+    classroom_name: str
     gradebook: List[ClassroomGradesRead]
