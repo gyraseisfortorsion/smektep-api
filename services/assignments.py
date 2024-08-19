@@ -281,6 +281,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         print(2)
         await object_storage_service.s3_upload(file.read(), filename)
         print(2.5)
+        file.close()
         return filename
     
 

@@ -113,11 +113,13 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 submission.student_info = submission.student.user_info
             return submissions
     
-    async def upload(self, pdf: bytes, assignment_id: str, user_id: str, file_ext:str, db: Session):
+    async def upload(self, filename: str, assignment_id: str, user_id: str, file_ext:str, db: Session):
+        pdf = open(filename, "rb")
         filename_in_s3 = f"{assignment_id}/{user_id}/{uuid.uuid4()}.{file_ext}"
         if file_ext not in ['pdf', 'jpg', 'jpeg', 'png']:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File extension not supported")
-        await object_storage_service.s3_upload(pdf, filename_in_s3)
+        await object_storage_service.s3_upload(pdf.read(), filename_in_s3)
+        pdf.close()
         return filename_in_s3
     
     async def check_submission(self, submission_id: str, db: Session):

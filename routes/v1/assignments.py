@@ -80,6 +80,8 @@ async def create_from_pdf(body: AssignmentCreate, filename: str, credentials: HT
 @router.post("/homework/upload", description="Upload a homework assignment")
 async def upload_homework(pdf: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     # save pdf to local directory first
+    with open(pdf.filename, "wb") as f:
+        f.write(pdf.file.read())
     if auth_service.get_role(credentials.credentials)== "teacher":
         hw = await assignment_service.upload_pdf_to_s3(pdf.filename)
         if not hw:
