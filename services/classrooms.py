@@ -34,7 +34,20 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
                 return classroom
         else:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload image")
-        
+    
+    def join_classroom(self, db: Session, user_id: str, classroom_code: str):
+        # create classroom_user
+        classroom = db.query(Classroom).filter(Classroom.id == classroom_code).first()
+        user = db.query(User).filter(User.id == user_id).first()
+        if not classroom:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Classroom not found")
+        classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == classroom_code, ClassroomUser.user_id == user_id).first()
+        if classroom_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You are already in this classroom")
+        classroom_user = ClassroomUser(classroom_id=classroom_code, user_id=user_id, role=user.role)
+        db.add(classroom_user)
+        db.commit()
+        return classroom_user
     async def get_image(self, db: Session, classroom_id: str):
         classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
         if classroom.background_image:

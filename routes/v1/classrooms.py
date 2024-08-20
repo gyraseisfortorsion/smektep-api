@@ -49,6 +49,11 @@ async def get_image(classroom_id: str, credentials: HTTPAuthorizationCredentials
             'Content-Type': 'image/png',
         }
     )
+
+@router.post("/join/{classroom_code}", description="Join classroom")
+def join_classroom(classroom_code: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    return classroom_service.join_classroom(db, user_id, classroom_code)
     
 @router.get("/gradebook/classroom/{classroom_id}", response_model=List[ClassroomGradesRead], description="Get all grades for a classroom. Only for teachers and curators")
 def get_classroom_grades_for_teacher(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
