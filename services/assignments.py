@@ -2,7 +2,7 @@ from openai import OpenAI
 from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile, File
 from core import settings
 from .base import ServiceBase
-from models import Assignment, ClassroomUser
+from models import Assignment, ClassroomUser, Classroom, User
 from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort
 from datetime import datetime
 from .object_storage import object_storage_service
@@ -366,6 +366,33 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         db.delete(assignment)
         db.commit()
         return "success"
+    
+    def create_test_classrooms_and_add_users(self, number_of_classrooms, db: Session):
+        for i in range(number_of_classrooms):
+            if i != 0:
+                classroom = Classroom(
+                    name=f"Classroom{i}",
+                    subject_id="663365b2-8b48-4e21-800c-dadf52586986",
+                    school_id="3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                )
+                db.add(classroom)
+                db.flush()
+                test_teacher = db.query(User).filter(User.email == f"test_teacher{i}@example.com").first()
+                test_student = db.query(User).filter(User.email == f"test_student{i}@example.com").first()
+                classroom_user_teacher = ClassroomUser(
+                    classroom_id=classroom.id,
+                    user_id=test_teacher.id,
+                    role="teacher"
+                )
+                classroom_user_student = ClassroomUser(
+                    classroom_id=classroom.id,
+                    user_id=test_student.id,
+                    role="student"
+                )
+                db.add(classroom_user_teacher)
+                db.add(classroom_user_student)
+        db.commit()
+        return "Classrooms created successfully"
     
 
 

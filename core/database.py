@@ -16,4 +16,6 @@ def get_db():
         yield db
     finally:
         db.commit()
+        print("DB Committed")
         db.close()
+        print("DB Closed")
