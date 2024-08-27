@@ -279,7 +279,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         # upload the file to s3 as bytes
         # get file extension
         ext = filename.split('.')[-1]
-        filename = "homeworks/" + uuid.uuid4().hex + ext
+        filename = "homeworks/" + uuid.uuid4().hex + "."+ext
         print(2)
         await object_storage_service.s3_upload(file.read(), filename)
         print(2.5)
