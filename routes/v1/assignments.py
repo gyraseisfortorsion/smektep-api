@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from core import get_db, settings
 from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate
 from services import assignment_service, auth_service
-
+import os
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
 @router.post("/word-problems/generate")
@@ -84,6 +84,8 @@ async def upload_homework(pdf: UploadFile = File(...), credentials: HTTPAuthoriz
         f.write(pdf.file.read())
     if auth_service.get_role(credentials.credentials)== "teacher":
         hw = await assignment_service.upload_pdf_to_s3(pdf.filename)
+        # remove file
+        os.remove(pdf.filename)
         if not hw:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload homework")
         return hw
