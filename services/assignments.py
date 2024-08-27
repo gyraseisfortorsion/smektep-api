@@ -36,10 +36,10 @@ class TaskGenerator(ABC):
         return response.choices[0].message.content
 
 class WordProblemGenerator(TaskGenerator):
-    async def generate(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
+    async def generate(self, subject: str, topic: str, num_questions: int, thematic: str = None, language: str = "russian"):
         system_message = {
             "role": "system",
-            "content": f"You are an AI tutor specializing in {subject_aim}. Always reply in Russian, even if the question is in English."
+            "content": f"You are an AI tutor specializing in {subject}. Always reply in Russian, even if the question is in English."
         }
 
         user_message = {
@@ -65,7 +65,7 @@ class WordProblemGenerator(TaskGenerator):
 
 
 class MultipleChoiceQuestionGenerator(TaskGenerator):
-    async def generate(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
+    async def generate(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None, language: str = "russian"):
         system_message = {
             "role": "system",
             "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in Russian, even if the question is in English."
@@ -90,7 +90,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
     async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
         return {"questions": await self.mcq_generator.generate(subject, topic, grade_level, difficulty, num_questions, num_choices, extra_info)}
 
-    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None):
+    async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None, language="russian"):
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -277,7 +277,9 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         # get the file from the local storage
         file = open(filename, 'rb')
         # upload the file to s3 as bytes
-        filename = "homeworks/" + uuid.uuid4().hex + ".pdf"
+        # get file extension
+        ext = filename.split('.')[-1]
+        filename = "homeworks/" + uuid.uuid4().hex + ext
         print(2)
         await object_storage_service.s3_upload(file.read(), filename)
         print(2.5)
