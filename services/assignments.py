@@ -294,7 +294,9 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         obj_in_data['id'] = str(uuid.uuid4())
 
         # remove problems and answers from the dict
-        obj_in_data.pop('user_id')
+        # if user_id is present as key, remove it
+        if 'user_id' in obj_in_data:
+            obj_in_data.pop('user_id')
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.flush()
