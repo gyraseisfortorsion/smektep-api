@@ -34,12 +34,12 @@ def submit(assignment: AssignmentSubmissionCreate, credentials: HTTPAuthorizatio
 @router.get("/download/{submission_id}")
 async def download(submission_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
-    pdf = await assignment_submission_service.download(submission_id, user_id, db)
+    pdf, filename = await assignment_submission_service.download(submission_id, user_id, db)
     if pdf:
         return Response(
             content=pdf,
             headers={
-                'Content-Disposition': f'attachment;filename={submission_id}.pdf',
+                'Content-Disposition': f'attachment;filename={filename}',
                 'Content-Type': 'application/octet-stream',
             }
         )

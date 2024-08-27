@@ -39,13 +39,13 @@ async def upload_image(classroom_id: str, image: UploadFile = File(...), credent
 
 @router.get("/image/{classroom_id}", description="Download classroom image")
 async def get_image(classroom_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
-    image = await classroom_service.get_image(db, classroom_id)
+    image, filename = await classroom_service.get_image(db, classroom_id)
     if not image:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
     return Response(
         content=image,
         headers={
-            'Content-Disposition': f'attachment;filename=classroom.png',
+            'Content-Disposition': f'attachment;filename={filename}',
             'Content-Type': 'image/png',
         }
     )

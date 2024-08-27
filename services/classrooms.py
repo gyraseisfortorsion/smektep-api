@@ -51,7 +51,7 @@ class ClassroomService(ServiceBase[Classroom, ClassroomCreate, ClassroomUpdate])
     async def get_image(self, db: Session, classroom_id: str):
         classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
         if classroom.background_image:
-            return await object_storage_service.s3_download(classroom.background_image)
+            return await object_storage_service.s3_download(classroom.background_image), classroom.background_image
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
         

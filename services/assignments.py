@@ -116,7 +116,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}. Always reply in {language}, even if the question is in another language. {conditional_ib_statement if language == 'english' else ''}"},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers.Just provide the problems without any additional comments. Also account for this: {extra_info}. Always reply in {language}, even if the question is in another language. {conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -135,7 +135,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in {language}, even if the question is in another language.{conditional_ib_statement if language == 'english' else ''}"},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. Just provide the problems without any additional comments. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in {language}, even if the question is in another language.{conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -339,8 +339,9 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         classroom_user = db.query(ClassroomUser).filter(ClassroomUser.classroom_id == assignment.classroom_id, ClassroomUser.user_id == user_id).first()
         if classroom_user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You do not have access to this assignment")
-
-        return await object_storage_service.s3_download(assignment.pdf_url)
+        print(assignment.pdf_url)
+        filename = assignment.pdf_url.split('/')[-1]
+        return await object_storage_service.s3_download(assignment.pdf_url), filename
     
     def get_student_assignment(self, classroom_id: str, assignment_id: str, user_id: str, db: Session):
         assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
