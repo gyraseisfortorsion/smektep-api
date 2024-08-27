@@ -60,6 +60,7 @@ class HomeworkCreate(Model):
     difficulty: int = 1
     quantity: int = 5
     extra_info: Optional[str] = None
+    language: Optional[str] = "ru"
 
 class MultipleChoiceCreate(Model):
     subject: str
@@ -69,12 +70,14 @@ class MultipleChoiceCreate(Model):
     num_questions: int
     num_choices: int
     extra_info: Optional[str] = None
+    language: Optional[str] = "ru"
 #wordproblems
 class WordProblemCreate(Model):
     subject_aim: str
     topic: str
     num_questions: int
     thematic: Optional[str] = None
+    language: Optional[str] = "ru"
 
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str

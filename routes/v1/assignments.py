@@ -11,12 +11,21 @@ router = APIRouter(prefix="/assignments", tags=["Assignments"])
 async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials) == "teacher":
-        word_problems = await assignment_service.generate_word_problems(
-            subject_aim=body.subject_aim,
-            topic=body.topic,
-            num_questions=body.num_questions,
-            thematic=body.thematic
-        )
+        if body.language:
+            word_problems = await assignment_service.generate_word_problems(
+                subject_aim=body.subject_aim,
+                topic=body.topic,
+                num_questions=body.num_questions,
+                thematic=body.thematic,
+                language=body.language
+            )
+        else:
+            word_problems = await assignment_service.generate_word_problems(
+                subject_aim=body.subject_aim,
+                topic=body.topic,
+                num_questions=body.num_questions,
+                thematic=body.thematic
+            )
         if not word_problems:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate word problems")
         return word_problems
@@ -28,15 +37,27 @@ async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAutho
 async def generate_multiple_choice_questions(body: MultipleChoiceCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials) == "teacher":
-        mcq = await assignment_service.generate_multiple_choice_questions(
-            subject=body.subject,
-            topic=body.topic,
-            grade_level=body.grade_level,
-            difficulty=body.difficulty,
-            num_questions=body.num_questions,
-            num_choices=body.num_choices,
-            extra_info=body.extra_info
-        )
+        if body.language:
+            mcq = await assignment_service.generate_multiple_choice_questions(
+                subject=body.subject,
+                topic=body.topic,
+                grade_level=body.grade_level,
+                difficulty=body.difficulty,
+                num_questions=body.num_questions,
+                num_choices=body.num_choices,
+                extra_info=body.extra_info,
+                language=body.language
+            )
+        else:
+            mcq = await assignment_service.generate_multiple_choice_questions(
+                subject=body.subject,
+                topic=body.topic,
+                grade_level=body.grade_level,
+                difficulty=body.difficulty,
+                num_questions=body.num_questions,
+                num_choices=body.num_choices,
+                extra_info=body.extra_info
+            )
         if not mcq:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate multiple choice questions")
         return mcq
@@ -49,7 +70,10 @@ async def generate_homework(password: str, body: HomeworkCreate, credentials: HT
     if password != settings.PASSWORD:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
     elif auth_service.get_role(credentials.credentials)== "teacher":
-        hw = await assignment_service.generate_homework(body.subject, body.topic, body.grade_level, body.difficulty, body.quantity, user_id, body.extra_info)
+        if body.language:
+            hw = await assignment_service.generate_homework(body.subject, body.topic, body.grade_level, body.difficulty, body.quantity, user_id, body.extra_info, body.language)
+        else:
+            hw = await assignment_service.generate_homework(body.subject, body.topic, body.grade_level, body.difficulty, body.quantity, user_id, body.extra_info)
         if not hw:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate homework")
         return hw

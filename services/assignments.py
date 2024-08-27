@@ -39,7 +39,7 @@ class WordProblemGenerator(TaskGenerator):
     async def generate(self, subject: str, topic: str, num_questions: int, thematic: str = None, language: str = "russian"):
         system_message = {
             "role": "system",
-            "content": f"You are an AI tutor specializing in {subject}. Always reply in Russian, even if the question is in English."
+            "content": f"You are an AI tutor specializing in {subject}. Always reply in {language}, even if the question is in another language.."
         }
 
         user_message = {
@@ -68,12 +68,12 @@ class MultipleChoiceQuestionGenerator(TaskGenerator):
     async def generate(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None, language: str = "russian"):
         system_message = {
             "role": "system",
-            "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in Russian, even if the question is in English."
+            "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. Always reply in {language}, even if the question is in another language."
         }
 
         user_message = {
             "role": "user",
-            "content": f"Generate {num_questions} multiple choice questions for the topic '{topic}' with {num_choices} choices each. At the end ALWAYS Provide the correct answer as well. Don't write any extra comment.{f'Additional instructions: {extra_info}' if extra_info else ''}"
+            "content": f"Generate {num_questions} multiple choice questions for the topic '{topic}' with {num_choices} choices each. At the end ALWAYS Provide the correct answer as well. Don't write any extra comment. Always reply in {language}, even if the question is in another language.{f'Additional instructions: {extra_info}' if extra_info else ''}"
         }
 
         return await self.call_openai_api(system_message, user_message)
@@ -84,16 +84,15 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)
         self.mcq_generator = MultipleChoiceQuestionGenerator(api_key=settings.OPENAI_API_KEY)
     
-    async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None):
-        return {"word_problems": await self.word_problem_generator.generate(subject_aim, topic, num_questions, thematic)}
+    async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None, language: str = "russian"):
+        return {"word_problems": await self.word_problem_generator.generate(subject_aim, topic, num_questions, thematic, language)}
 
-    async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None):
-        return {"questions": await self.mcq_generator.generate(subject, topic, grade_level, difficulty, num_questions, num_choices, extra_info)}
+    async def generate_multiple_choice_questions(self, subject: str, topic: str, grade_level: str, difficulty: str, num_questions: int, num_choices: int, extra_info: str = None, language: str = "russian"):
+        return {"questions": await self.mcq_generator.generate(subject, topic, grade_level, difficulty, num_questions, num_choices, extra_info, language)}
 
     async def generate_homework(self, subject: str, topic, grade_level, difficulty, quantity, user_id, extra_info=None, language="russian"):
-
+        conditional_ib_statement = "You should comply with IB standards and practices."
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
         if subject.lower() == 'mathematics':
             # Generate answers
             if extra_info is not None:
@@ -117,7 +116,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Also account for this: {extra_info}. Always reply in {language}, even if the question is in another language. {conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -125,7 +124,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 answers = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}. Always reply in russian, even if the question is in english."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Also account for this: {extra_info}. Always reply in {language}, even if the question is in another language.{conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, \"2x\"...]) of answers and NOTHING ELSE!, DO NOT FORGET TO ENCLOSE ALL ANSWERS IN QUOTES!"}
                     ]
                 )
@@ -136,7 +135,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 problems = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in russian, even if the question is in english."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of problems, without including answers. Always reply in {language}, even if the question is in another language.{conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Generate problems for {topic} DON'T FORGET TO NUMERATE PROBLEMS! Quantity of problems: {quantity}"}
                     ]
                 )
@@ -144,7 +143,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
                 answers = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Always reply in russian, even if the question is in english."},
+                        {"role": "system", "content": f"You are an AI tutor specializing in {subject} for {grade_level} grade. The difficulty level is {difficulty}. You only provide a list of answers. Always reply in {language}, even if the question is in another language.{conditional_ib_statement if language == 'english' else ''}"},
                         {"role": "user", "content": f"Provide answers for these problems: {problems.choices[0].message.content}. Only provide a python list (e.g [1,2,3, ...]) of answers and NOTHING ELSE!"}
                     ]
                 )
