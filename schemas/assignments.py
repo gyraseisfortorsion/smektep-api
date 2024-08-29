@@ -27,6 +27,19 @@ class AssignmentRead(Model):
     answers: Optional[str]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+    file_extension: Optional[str] = None
+
+    # write a validator which would get the file_extension from the pdf_url
+    @validator('file_extension', always=True)
+    def set_file_extension(cls, v,  values, **kwargs):
+        print("here")
+        if values.get('pdf_url'):
+            v = values['pdf_url'].split('.')[-1]
+        return v
+    
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True
 class AssignmentCreate(Model):
     type: AssignmentType
     date_from: Optional[datetime]

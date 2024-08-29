@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate
+from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead
 from services import assignment_service, auth_service
 import os
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
@@ -154,7 +154,7 @@ def get_student_assignment(classroom_id: str, assignment_id: str, credentials: H
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only students can view homework")
     
-@router.get("/teacher/{classroom_id}/{assignment_id}", description="Get assignment for a classroom FOR TEACHER")
+@router.get("/teacher/{classroom_id}/{assignment_id}", description="Get assignment for a classroom FOR TEACHER", response_model=AssignmentRead)
 def get_teacher_assignment(classroom_id: str, assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     if auth_service.get_role(credentials.credentials)== "teacher":

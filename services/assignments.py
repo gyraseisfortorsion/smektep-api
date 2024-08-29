@@ -299,7 +299,7 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.flush()
-        
+        db_obj.file_extension = pdf_url.split('.')[-1]
         return db_obj
     
     async def approve_homework(self, homework: HomeworkAssignmentCreate, db: Session):
