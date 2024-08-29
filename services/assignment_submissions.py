@@ -678,7 +678,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found") 
 
-    def download(self, submission_id: str, user_id: str, db: Session):
+    async def download(self, submission_id: str, user_id: str, db: Session):
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
 
         classroom_user = db.query(ClassroomUser).filter(ClassroomUser.user_id ==  user_id, ClassroomUser.classroom_id==submission.assignment.classroom_id).first()
@@ -690,12 +690,12 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                     pdf = object_storage_service.s3_download(file_urls[0])
                     print(file_urls[0])
                     filename = file_urls[0].split('/')[-1]
-                    return pdf, filename
+                    return await pdf, filename
             if submission.student_id == user_id:
                 pdf = object_storage_service.s3_download(file_urls[0])
                 filename = file_urls[0].split('/')[-1]
                 print(file_urls[0])
-                return pdf, filename
+                return await pdf, filename
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
         
