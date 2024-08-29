@@ -268,7 +268,6 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         # Convert to PDF
         # pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
         pdfkit.from_string(rendered_html, output_filename)
-
         print(f'PDF generated: {output_filename}')
         return output_filename
     
