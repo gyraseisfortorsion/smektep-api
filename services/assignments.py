@@ -15,6 +15,7 @@ import markdown2
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
 from abc import ABC, abstractmethod
+from enum import Enum
 
 class TaskGenerator(ABC):
     def __init__(self, api_key: str):

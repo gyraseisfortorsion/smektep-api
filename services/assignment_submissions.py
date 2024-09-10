@@ -455,12 +455,12 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
             choose the most cohesive and logical elements to create the best OCR text.
             Make sure signs and words make sense logically.
-            Do not add any comments, just return the best OCR you think of."""
+            Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work"""
         }
         response = model.generate_content(
             glm.Content(
                 parts = [
-                glm.Part(text=f"You are a helpful assistant that formats text.Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. Return in the UNICODE format. NOT IN LATEX."),
+                glm.Part(text=f"You are a helpful assistant that formats text.Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work Return in the UNICODE format. NOT IN LATEX."),
                 ],
             ),
            stream=True)
@@ -580,7 +580,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
             choose the most cohesive and logical elements to create the best OCR text.
             Make sure signs and words make sense logically.
-            Do not add any comments, just return the best OCR you think of."""
+            Do not add any comments, just return the best OCR you think of. Do not interpolate anythings, you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work"""
         }   
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -629,7 +629,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 },
                 {
                 "type": "text",
-                "text": f"Here are the assignment problems: {assignment_problems}, and here are the assignment answers: {assignment_answers}",
+                "text": f"Here are the assignment problems: {assignment_problems}, and here are the assignment answers: {assignment_answers}. Before checking the solution, make sure it is relevant to the task, only then proceed with checking and grading.",
                 },
                 # {
                 # "type": "image_url",
