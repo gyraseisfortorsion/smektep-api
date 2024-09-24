@@ -21,6 +21,7 @@ class Post(Model):
     assignment = relationship('Assignment', back_populates='posts')
     classroom = relationship('Classroom', back_populates='posts')
     author = relationship('User', back_populates='posts')
+    post_commentaries = relationship('AssignmentPostCommentary', back_populates='post', cascade='all, delete')
 
 
 """

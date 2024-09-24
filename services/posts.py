@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Header
 from core import settings
 from .base import ServiceBase
-from models import Post, ClassroomUser
-from schemas import PostCreate, PostUpdate, PostRead
+from models import Post, ClassroomUser, AssignmentPostCommentary
+from schemas import PostCreate, PostUpdate, PostRead, PostCommentaryCreate
 from fastapi.encoders import jsonable_encoder
-
+import uuid
 from sqlalchemy.orm import Session
 
 
@@ -54,6 +54,20 @@ class PostService(ServiceBase[Post, PostCreate, PostUpdate]):
         db.flush()
         
         return db_obj
+    
+    def get_post_commentaries(self, post_id: str, db: Session):
+        post = db.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        return post.post_commentaries
         
+    def create_post_commentary(self, body: PostCommentaryCreate, user_id: str, db: Session):
+        body_data = jsonable_encoder(body)
+        body_data['id'] = str(uuid.uuid4())
+        body_data['user_id'] = user_id
+        post_commentary = AssignmentPostCommentary(**body_data)
+        db.add(post_commentary)
+        db.flush()
+        return post_commentary
     
 post_service = PostService(Post)

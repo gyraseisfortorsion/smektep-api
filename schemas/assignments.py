@@ -150,3 +150,17 @@ class AssignmentSubmissionRead(Model):
     assignment: AssignmentsReadShort
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+class AssignmmentCommentaryRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    assignment_id: uuid.UUID
+    user_id: uuid.UUID
+    commentary: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+class AssignmentCommentaryCreate(Model):
+    assignment_id: uuid.UUID
+    commentary: str

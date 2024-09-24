@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import PostCreate, PostRead, PostUpdate
+from schemas import PostCreate, PostRead, PostUpdate, PostCommentaryRead, PostCommentaryCreate
 from services import auth_service, post_service
 from typing import List
 
@@ -38,3 +38,12 @@ def update_post(post_id: str, body: PostUpdate, credentials: HTTPAuthorizationCr
 def delete_post(post_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id
     return post_service.delete(db, post_id, user_id)
+
+@router.get("/commentaries/list/{post_id}", description="Get all commentaries for a post", response_model=List[PostCommentaryRead])
+def get_post_commentaries(post_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    return post_service.get_post_commentaries(post_id, db)
+
+@router.post("/commentaries/create", description="Create a commentary for a post")
+def create_post_commentary(body: PostCommentaryCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    return post_service.create_post_commentary(body, user_id, db)

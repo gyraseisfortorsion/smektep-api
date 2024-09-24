@@ -34,4 +34,17 @@ class PostRead(Model):
     created_at: datetime
     updated_at: Optional[datetime]
 
+class PostCommentaryRead(Model):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    post_id: uuid.UUID
+    user_id: uuid.UUID
+    commentary: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+class PostCommentaryCreate(Model):
+    post_id: uuid.UUID
+    commentary: str
 

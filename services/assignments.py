@@ -2,8 +2,8 @@ from openai import OpenAI
 from fastapi import FastAPI, HTTPException, Depends, status, Header, UploadFile, File
 from core import settings
 from .base import ServiceBase
-from models import Assignment, ClassroomUser, Classroom, User
-from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort
+from models import Assignment, ClassroomUser, Classroom, User, AssignmentPostCommentary
+from schemas import AssignmentCreate, AssignmentUpdate, HomeworkAssignmentCreate, AssignmentsStudentsReadShort, AssignmentCommentaryCreate
 from datetime import datetime
 from .object_storage import object_storage_service
 from reportlab.lib.pagesizes import letter
@@ -416,7 +416,20 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         db.commit()
         return "Classrooms created successfully"
     
-
+    def get_assignment_commentaries(self, assignment_id: str, db: Session):
+        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+        if not assignment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
+        return assignment.assignment_commentaries
+    
+    def create_assignment_commentary(self, body: AssignmentCommentaryCreate, user_id: str, db: Session):
+        body_data = jsonable_encoder(body)
+        body_data['id'] = str(uuid.uuid4())
+        body_data['user_id'] = user_id
+        db_obj = AssignmentPostCommentary(**body_data)
+        db.add(db_obj)
+        db.flush()
+        return db_obj
 
 
 assignment_service = AssignmentService(Assignment)

@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead, LessonPlanCreate
+from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead, LessonPlanCreate, AssignmmentCommentaryRead, AssignmentCommentaryCreate
 from services import assignment_service, auth_service
 import os
+from typing import List
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
 @router.post("/word-problems/generate")
@@ -195,4 +196,12 @@ def delete_assignment(assignment_id: str, credentials: HTTPAuthorizationCredenti
         return assignment_service.delete(assignment_id, user_id, db)
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can delete homework")
+
+@router.get("/commentaries/list/{assignment_id}", description="Get all commentaries for an assignment", response_model=List[AssignmmentCommentaryRead])
+def get_assignment_commentaries(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    return assignment_service.get_assignment_commentaries(assignment_id, db)
     
+@router.post("/commentaries/create", description="Create a commentary for an assignment")
+def create_assignment_commentary(body: AssignmentCommentaryCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    return assignment_service.create_assignment_commentary(body, user_id, db)
