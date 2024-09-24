@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead
+from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead, LessonPlanCreate
 from services import assignment_service, auth_service
 import os
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
@@ -32,6 +32,32 @@ async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAutho
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can generate word problems")
 
+@router.post("/lesson-plan/generate")
+async def generate_lesson_plan(body: LessonPlanCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials) == "teacher":
+        if body.language:
+            lesson_plan = await assignment_service.generate_lesson_plan(
+                subject=body.subject,
+                topic=body.topic,
+                grade_level=body.grade_level,
+                lesson_duration=body.lesson_duration,
+                extra_info=body.extra_info,
+                language=body.language
+            )
+        else:
+            lesson_plan = await assignment_service.generate_lesson_plan(
+                subject=body.subject,
+                topic=body.topic,
+                grade_level=body.grade_level,
+                lesson_duration=body.lesson_duration,
+                extra_info=body.extra_info
+            )
+        if not lesson_plan:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate lesson plan")
+        return lesson_plan
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can generate lesson plans")
 
 @router.post("/multiple-choice/generate")
 async def generate_multiple_choice_questions(body: MultipleChoiceCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):

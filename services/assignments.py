@@ -78,12 +78,30 @@ class MultipleChoiceQuestionGenerator(TaskGenerator):
         }
 
         return await self.call_openai_api(system_message, user_message)
-    
+
+class LessonPlanGenerator(TaskGenerator):
+    async def generate(self, topic: str, subject: str = None,  grade_level: str = None, lesson_duration: int = None, extra_info: str = None, language: str = "russian"):
+        
+        system_message = {
+            "role": "system",
+            "content": f"You are an AI tutor specializing in {subject if subject else topic}. The lesson duration is {lesson_duration if lesson_duration else 60} minutes. Always reply in {language}, even if the request is in another language."
+        }
+        user_message = {
+            "role": "user",
+            "content": f"Generate a lesson plan for the topic '{topic}'. The lesson should last {lesson_duration if lesson_duration else 60} minutes. Don't write any extra comment. Always reply in {language}, even if the question is in another language.{f'Additional instructions: {extra_info}' if extra_info else ''}"
+        }
+        return await self.call_openai_api(system_message, user_message)
+class HomeworkGenerator(TaskGenerator):
+    async def generate(subject: str, topic: str, grade_level: str, difficulty: int, quantity: int, user_id: uuid.UUID, extra_info: str):
+        pass
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
     def __init__(self, db: Session):
         super().__init__(db)
         self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)
         self.mcq_generator = MultipleChoiceQuestionGenerator(api_key=settings.OPENAI_API_KEY)
+        self.lesson_plan_generator = LessonPlanGenerator(api_key=settings.OPENAI_API_KEY)
+    async def generate_lesson_plan(self, topic: str, subject = None, grade_level: str = None, lesson_duration: int=None, extra_info: str = None, language: str = "russian"):
+        return {"lesson_plan": await self.lesson_plan_generator.generate(topic, subject, grade_level, lesson_duration, extra_info, language)}
     
     async def generate_word_problems(self, subject_aim: str, topic: str, num_questions: int, thematic: str = None, language: str = "russian"):
         return {"word_problems": await self.word_problem_generator.generate(subject_aim, topic, num_questions, thematic, language)}

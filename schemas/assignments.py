@@ -75,6 +75,13 @@ class HomeworkCreate(Model):
     extra_info: Optional[str] = None
     language: Optional[str] = "russian"
 
+class LessonPlanCreate(Model):
+    subject: Optional[str] =  None
+    topic: str
+    language: Optional[str] =  None
+    grade_level: Optional[str] =  None
+    lesson_duration: Optional[int] =  None
+    extra_info: Optional[str] = None
 class MultipleChoiceCreate(Model):
     subject: str
     topic: str
