@@ -99,6 +99,10 @@ class WordProblemCreate(Model):
     thematic: Optional[str] = None
     language: Optional[str] = "russian"
 
+class TestExamCreate(Model):
+    num_questions: int
+    grade_level: int
+
 class HomeworkAssignmentCreate(AssignmentCreate):
     problems: str
     answers: Optional[str] = None

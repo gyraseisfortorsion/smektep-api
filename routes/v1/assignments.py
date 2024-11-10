@@ -2,12 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadF
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core import get_db, settings
-from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead, LessonPlanCreate, AssignmmentCommentaryRead, AssignmentCommentaryCreate
+from schemas import AssignmentCreate, HomeworkCreate, HomeworkAssignmentCreate, MultipleChoiceCreate, WordProblemCreate, AssignmentRead, LessonPlanCreate, AssignmmentCommentaryRead, AssignmentCommentaryCreate, TestExamCreate
 from services import assignment_service, auth_service
 import os
 from typing import List
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
+@router.post("/test/generate")
+async def generate_test(body: TestExamCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+    user_id = auth_service.get_current_user(credentials.credentials, db).id
+    if auth_service.get_role(credentials.credentials) == "teacher":
+        test = await assignment_service.generate_test(body.num_questions, body.grade_level)
+        if not test:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate test")
+        return test
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only teachers can generate tests")
 @router.post("/word-problems/generate")
 async def generate_word_problems(body: WordProblemCreate, credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), db: Session = Depends(get_db)):
     user_id = auth_service.get_current_user(credentials.credentials, db).id

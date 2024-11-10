@@ -308,7 +308,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             # max_output_tokens=0),
             stream=True)
         transcribed_submission.resolve()
-        print(transcribed_submission.text)
+        # print(transcribed_submission.text)
         assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
         assignment_problems = assignment.problems
         assignment_answers = assignment.answers

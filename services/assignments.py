@@ -16,6 +16,7 @@ import pdfkit
 from jinja2 import Environment, FileSystemLoader
 from abc import ABC, abstractmethod
 from enum import Enum
+import base64
 
 class TaskGenerator(ABC):
     def __init__(self, api_key: str):
@@ -35,6 +36,33 @@ class TaskGenerator(ABC):
             raise HTTPException(status_code=500, detail="Failed to generate tasks")
 
         return response.choices[0].message.content
+
+class TestTaskGenerator(TaskGenerator):
+    async def generate(self, num_questions: int, grade_level: int, language: str = "russian"):
+        image_paths = ["services/templates_for_tz/7grade.jpg", "services/templates_for_tz/8grade.jpg", "services/templates_for_tz/9grade.jpg"]
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Convert images to base64
+        image_base64_list = []
+        for image_path in image_paths:
+            with open(image_path, "rb") as image_file:
+                image_base64_list.append(base64.b64encode(image_file.read()).decode('utf-8'))
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+            {"role": "system", "content": f"You are an AI tutor specializing in generating math exams. You will be given three images of sample tests for 7th, 8th, and 9th grades, the tests are for mathematics, you should strictly follow the given test formats and topics. Always reply in Russian"},
+            {"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[0]}"}},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[1]}"}},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[2]}"}},
+                {"type": "text", "content": f"Generate {num_questions} questions for each of the tests above. Always reply in {language}, even if the question is in another language. The grade level should be {grade_level}. Only reply with the exam contents"}
+            ]}
+            ]
+        )
+
+        return response.choices[0].message.content
+
+    
 
 class WordProblemGenerator(TaskGenerator):
     async def generate(self, subject: str, topic: str, num_questions: int, thematic: str = None, language: str = "russian"):
@@ -100,6 +128,11 @@ class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpda
         self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)
         self.mcq_generator = MultipleChoiceQuestionGenerator(api_key=settings.OPENAI_API_KEY)
         self.lesson_plan_generator = LessonPlanGenerator(api_key=settings.OPENAI_API_KEY)
+        self.test_task_generator = TestTaskGenerator(api_key=settings.OPENAI_API_KEY)
+    
+    async def generate_test(self, num_questions: int, grade_level: int):
+        return {"test": await self.test_task_generator.generate(num_questions, grade_level)}
+    
     async def generate_lesson_plan(self, topic: str, subject = None, grade_level: str = None, lesson_duration: int=None, extra_info: str = None, language: str = "russian"):
         return {"lesson_plan": await self.lesson_plan_generator.generate(topic, subject, grade_level, lesson_duration, extra_info, language)}
     
