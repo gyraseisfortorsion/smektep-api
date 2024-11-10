@@ -55,7 +55,7 @@ class TestTaskGenerator(TaskGenerator):
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[0]}"}},
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[1]}"}},
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64_list[2]}"}},
-                {"type": "text", "content": f"Generate {num_questions} questions for each of the tests above. Always reply in {language}, even if the question is in another language. The grade level should be {grade_level}. Only reply with the exam contents"}
+                {"type": "text", "text": f"Generate {num_questions} questions for each of the tests above. Always reply in {language}, even if the question is in another language. The grade level should be {grade_level}. Only reply with the exam contents"}
             ]}
             ]
         )
