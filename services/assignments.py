@@ -123,6 +123,7 @@ class HomeworkGenerator(TaskGenerator):
     async def generate(subject: str, topic: str, grade_level: str, difficulty: int, quantity: int, user_id: uuid.UUID, extra_info: str):
         pass
 class AssignmentService(ServiceBase[Assignment, AssignmentCreate, AssignmentUpdate]):
+    
     def __init__(self, db: Session):
         super().__init__(db)
         self.word_problem_generator = WordProblemGenerator(api_key=settings.OPENAI_API_KEY)

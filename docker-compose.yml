@@ -3,12 +3,12 @@ version: '1'
 services:
   fastapi-app:
     platform: linux/amd64
-    command: bash -c "uvicorn api:app --host 0.0.0.0 --port 8000 --reload"
+    command: bash -c "uvicorn api:app --host 0.0.0.0 --port 8001 --reload"
     build: .
-    container_name: fastapi-app
+    container_name: smektep-api
     restart: always
     ports:
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - .:/app
     deploy:
