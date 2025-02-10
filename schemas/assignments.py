@@ -50,6 +50,8 @@ class AssignmentCreate(Model):
     title: str
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+    answers: Optional[str]
+    problems: Optional[str]
 
 
 
