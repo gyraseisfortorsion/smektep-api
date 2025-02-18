@@ -361,7 +361,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             os.makedirs('services/temp')
 
         genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.file_urls)
@@ -404,7 +404,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
 
         chain = ChatGoogleGenerativeAI(
                     google_api_key=settings.GOOGLE_API_KEY,
-                    model="gemini-1.5-flash",
+                    model="gemini-2.0-flash",
                     temperature=1,
                     max_tokens=None,
                     timeout=None,
@@ -577,7 +577,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         user_message = {
             "role": "user",
             "content": f"""Given these 3 OCR text versions of the same image: 
-            1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
+            1) {ocrs[0]}, 2) {ocrs[1]}, 3) {ocrs[2]}
             choose the most cohesive and logical elements to create the best OCR text.
             Make sure signs and words make sense logically.
             Do not add any comments, just return the best OCR you think of. Do not interpolate anythings, you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work"""
