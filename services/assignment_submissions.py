@@ -425,10 +425,10 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         for _ in range(3):
             msg = chain.invoke(
             [
-                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed. Image may contain tables and diagrams, if tables or diagrams are present use html tags to represent them."),
+                AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed. You should always reply in the format of html. Image may contain tables and diagrams, if tables or diagrams are present use html tags to represent them."),
                 HumanMessage(
                     content=[
-                        {"type": "text", "text": "Extract all texts from image. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments. Image may contain tables and diagrams, if tables or diagrams are present use html tags to represent them."},
+                        {"type": "text", "text": "Extract all texts from image. Reply in the html format. Take into consideration that most of the text and math symbols will be in Russian! Don't leave anything out, return all extracted texts with no comments. Image may contain tables and diagrams, if tables or diagrams are present use html tags to represent them."},
                         {
                             "type": "image_url",
                             "image_url": {
