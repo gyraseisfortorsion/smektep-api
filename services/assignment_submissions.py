@@ -407,8 +407,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                     model="gemini-2.0-flash",
                     temperature=1,
                     max_tokens=None,
-                    timeout=None,
-                    max_retries=2,
+                    timeout=10,
+                    max_retries=1,
                     # other params...
                 )
 
@@ -465,7 +465,6 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                         glm.Part(text=f"You are a helpful assistant that formats text. Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. You should only provide the OCR, it should be accurate i.e. if student made mistake include the mistake, do not make any comments on student's work. Return in the UNICODE format. NOT IN LATEX."),
                     ],
                 ),
-                generation_config=genai.types.GenerationConfig(timeout=30)  # Set explicit timeout
             )
             
             result = LatexNodes2Text().latex_to_text(response.text)
