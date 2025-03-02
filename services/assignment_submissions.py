@@ -457,20 +457,21 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             Make sure signs and words make sense logically.
             Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work"""
         }
-        # Modified to avoid retry issues with DeadlineExceeded errors
-        try:
-            response = model.generate_content(
-                glm.Content(
-                    parts = [
-                        glm.Part(text=f"You are a helpful assistant that formats text. Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. You should only provide the OCR, it should be accurate i.e. if student made mistake include the mistake, do not make any comments on student's work. Return as is without any comments."),
-                    ],
-                ),
-            )
+        return ocrs[0]
+        # # Modified to avoid retry issues with DeadlineExceeded errors
+        # try:
+        #     response = model.generate_content(
+        #         glm.Content(
+        #             parts = [
+        #                 glm.Part(text=f"You are a helpful assistant that formats text. Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. You should only provide the OCR, it should be accurate i.e. if student made mistake include the mistake, do not make any comments on student's work. Return as is without any comments."),
+        #             ],
+        #         ),
+        #     )
             
-            # result = LatexNodes2Text().latex_to_text(response.text)
-            shutil.rmtree('services/temp')
-            print("return final result in gemini transcribe")
-            return response.text
+        #     # result = LatexNodes2Text().latex_to_text(response.text)
+        #     shutil.rmtree('services/temp')
+            # print("return final result in gemini transcribe")
+            # return response.text
         except Exception as e:
             print(f"Error with Gemini model: {str(e)}")
             # Fallback to GPT transcription
