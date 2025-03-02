@@ -462,7 +462,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
             response = model.generate_content(
                 glm.Content(
                     parts = [
-                        glm.Part(text=f"You are a helpful assistant that formats text. Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. You should only provide the OCR, it should be accurate i.e. if student made mistake include the mistake, do not make any comments on student's work. Return in the UNICODE format. NOT IN LATEX."),
+                        glm.Part(text=f"You are a helpful assistant that formats text. Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. You should only provide the OCR, it should be accurate i.e. if student made mistake include the mistake, do not make any comments on student's work. Return as is without any comments."),
                     ],
                 ),
             )
@@ -512,8 +512,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         if not os.path.exists('services/temp'):
             os.makedirs('services/temp')
 
-        genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # genai.configure(api_key=settings.GOOGLE_API_KEY)
+        # model = genai.GenerativeModel('gemini-1.5-flash')
         # get pds submission from s3
         submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
         print(submission.file_urls)
