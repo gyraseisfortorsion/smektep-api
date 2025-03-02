@@ -422,7 +422,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         #     max_tokens=500
         # )
         ocrs = []
-        for _ in range(3):
+        for _ in range(2):
             msg = chain.invoke(
             [
                 AIMessage(content="You are a useful bot that is especially good at extracting texts from images, no matter if handwritten or printed. You should always reply in the format of html. Image may contain tables and diagrams, if tables or diagrams are present use html tags to represent them."),
@@ -451,8 +451,8 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         }
         user_message = {
             "role": "user",
-            "content": f"""Given these 3 OCR text versions of the same image: 
-            1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]}
+            "content": f"""Given these 2 OCR text versions of the same image: 
+            1) {ocrs[0]}, 2) {ocrs[1]}
             choose the most cohesive and logical elements to create the best OCR text.
             Make sure signs and words make sense logically.
             Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work"""
@@ -460,7 +460,7 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
         response = model.generate_content(
             glm.Content(
                 parts = [
-                glm.Part(text=f"You are a helpful assistant that formats text.Given these 3 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, 2) {ocrs[2]} choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work Return in the UNICODE format. NOT IN LATEX."),
+                glm.Part(text=f"You are a helpful assistant that formats text.Given these 2 OCR text versions of the same image: 1) {ocrs[0]}, 2) {ocrs[1]}, choose the most cohesive and logical elements to create the best OCR text. Make sure signs and words make sense logically. Do not add any comments, just return the best OCR you think of. you should only provide the OCR, it should be accuarate i.e. if student made mistake include the mistake, do not make any comments on student's work Return in the UNICODE format. NOT IN LATEX."),
                 ],
             ),
            stream=True)
