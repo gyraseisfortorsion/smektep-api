@@ -467,9 +467,9 @@ class AssignmentSubmissionService(ServiceBase[AssignmentSubmission, AssignmentSu
                 ),
             )
             
-            result = LatexNodes2Text().latex_to_text(response.text)
+            # result = LatexNodes2Text().latex_to_text(response.text)
             shutil.rmtree('services/temp')
-            return result
+            return response.text
         except Exception as e:
             print(f"Error with Gemini model: {str(e)}")
             # Fallback to GPT transcription
